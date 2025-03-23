@@ -1,0 +1,43 @@
+[
+  {
+    "header": "",
+    "items": [
+      {
+        "text": "Dashboard",
+        "icon": "bx bx-home",
+        "available": true,
+        "link": "/"
+      },
+      {
+        "text": "Quản lý tin nhắn",
+        "icon": "bx bx-chat",
+        "available": true,
+        "link": "/message-management"
+      },
+      {
+        "text": "Đào tạo chatbot",
+        "icon": "bx bx-brain",
+        "available": true,
+        "link": "/chatbot-training"
+      },
+      {
+        "text": "Cài đặt",
+        "icon": "bx bx-cog",
+        "available": true,
+        "link": "/settings",
+        "submenu": [
+          {
+            "text": "Tích hợp",
+            "available": true,
+            "link": "/settings/integrations"
+          },
+          {
+            "text": "Nhân viên",
+            "available": true,
+            "link": "/settings/staff"
+          }
+        ]
+      }
+    ]
+  }
+]

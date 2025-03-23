@@ -1,0 +1,63 @@
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+} */
+a {
+  text-decoration: none !important;
+}
+
+.bg-purple {
+  background-color: #6f42c1; /* Màu tím giống trong hình */
+}
+
+.chat-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Hiệu ứng "đang nhập" */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background-color: #6c757d; /* Màu xám giống trong hình */
+  border-radius: 50%;
+  margin-right: 4px;
+  animation: typing 1s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%,
+  20% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+}
