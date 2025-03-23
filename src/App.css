@@ -61,3 +61,6 @@ a {
     opacity: 0.2;
   }
 }
+.custom-dropdown .dropdown-toggle::after {
+  display: none !important;
+}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Card, InputGroup, FormControl, ProgressBar, Dropdown, Button, Modal, Form, Badge } from "react-bootstrap";
-import { FiFilter, FiSearch, FiRepeat, FiTag, FiSend, FiLink, FiAlertCircle } from "react-icons/fi";
+import { FiFilter, FiSearch, FiRepeat, FiTag, FiSend, FiLink, FiAlertCircle, FiMoreHorizontal } from "react-icons/fi";
 const MessageManagementView = () => {
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -68,13 +68,24 @@ const ChatSidebar = () => {
                   B
                </div>
                <div className="ms-2">
-                  <div className="fw-bold">bui văn toàn - 034522...</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", }}>
+                     <div className="fw-bold">bui văn toàn - 034522...</div>
+                     <Dropdown key={"none"} className="custom-dropdown" style={{ marginLeft: "40px" }}>
+                        <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
+                           <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                           <Dropdown.Item>Bỏ xem</Dropdown.Item>
+                           <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
+                        </Dropdown.Menu>
+                     </Dropdown>
+                  </div>
                   <small className="text-muted">Mình không thể trả lời cho...</small>
                </div>
             </div>
             <div className="mt-1 d-flex align-items-center">
-               <span className="badge bg-primary text-light me-2">Tư vấn</span>
-               <span className="text-muted small">T6</span>
+               <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+
             </div>
          </Card>
          <Modal show={show} onHide={handleClose} centered size="lg">
