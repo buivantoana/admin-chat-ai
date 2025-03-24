@@ -58,7 +58,7 @@ function DataTrainingViewRight() {
       <Container className="mt-2">
          {/* Phần header giữ nguyên */}
          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <h3>Gậy golf</h3>
+            <h4>Gậy golf</h4>
             <Row className="mb-3">
                <Col className="text-end">
                   <span style={{ paddingRight: "10px" }}>
@@ -77,7 +77,7 @@ function DataTrainingViewRight() {
          {/* Phần FAQ header giữ nguyên */}
          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <div>
-               <h5>FAQ ({faqs.length})</h5>
+               <h6>FAQ ({faqs.length})</h6>
             </div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                <div>

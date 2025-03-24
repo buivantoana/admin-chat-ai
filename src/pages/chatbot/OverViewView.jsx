@@ -172,7 +172,7 @@ function ChatUI() {
       <div style={{ width: "100%", height: "20vh" }} >
          <Row>
             <Col md={12} >
-               <Card className="mb-3" style={{ background: "#f5f5f9" }}>
+               <Card className="border-primary mb-3" style={{ background: "#f5f5f9", cursor: "pointer", border: "1px solid #ddd" }}>
                   <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
                      <div style={{ display: "flex", gap: "10px" }}>
                         <div>

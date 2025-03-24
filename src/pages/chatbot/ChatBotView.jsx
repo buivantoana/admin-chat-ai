@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Card, Dropdown, Modal, ToggleButton } from "react-bootstrap";
+import { Button, Card, Container, Dropdown, Modal, ToggleButton } from "react-bootstrap";
 import { FiGrid, FiImage, FiList, FiSettings, FiTrash2 } from "react-icons/fi";
 
 
@@ -16,7 +16,7 @@ const ChatBotView = () => {
    const handleClose = () => setShow(false);
 
    return (
-      <div className=" mt-4">
+      <Container className="" style={{ background: "white", borderRadius: "10px", padding: "20px 20px", height: "75vh" }}>
          <div className="d-flex justify-content-between align-items-center mb-3">
             <h4>
                <i className="bi bi-robot"></i> Đào tạo chatbot
@@ -35,7 +35,7 @@ const ChatBotView = () => {
          {view === "grid" ? (
             <div className="row">
                <div className="col-md-4">
-                  <Card className="border-primary" style={{ cursor: "pointer" }}>
+                  <Card className="border-primary" style={{ cursor: "pointer", border: "1px solid #ddd" }}>
                      <Card.Body>
                         <div className="d-flex align-items-center" onClick={handleNavigate}>
                            <img
@@ -115,7 +115,7 @@ const ChatBotView = () => {
             </Modal.Footer>
          </Modal>
          <CreateChatbotModal show={createChatBot} setShow={setCreateChatBot} />
-      </div>
+      </Container>
    );
 };
 

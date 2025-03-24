@@ -5,7 +5,7 @@ const IntergrationView = () => {
    return (
       <div>
          <Container style={{ background: "white", borderRadius: "8px", padding: "20px" }}>
-            <h3>Open AI</h3>
+            <h4>Open AI</h4>
             <Row style={{ alignItems: "end" }}>
                <Col md={4}>
                   <Form.Group >

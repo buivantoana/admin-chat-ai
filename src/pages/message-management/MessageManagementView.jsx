@@ -160,11 +160,7 @@ function ChatUI() {
       { text: 'Mình không thể trả lời cho cậu ngay nhưng vui lòng hỏi mình bất cứ điều gì cậu cần nhé!', time: '17:29', sender: 'me' },
       { image: 'https://anhcuoiviet.vn/wp-content/uploads/2022/09/de-thuong-2.jpg', time: '17:30', sender: 'me' },
       { text: 'hello', time: '17:28', sender: 'other' },
-      { text: 'Mình không thể trả lời cho cậu ngay nhưng vui lòng hỏi mình bất cứ điều gì cậu cần nhé!', time: '17:29', sender: 'me' },
-      { image: 'https://anhcuoiviet.vn/wp-content/uploads/2022/09/de-thuong-2.jpg', time: '17:30', sender: 'me' },
-      { text: 'hello', time: '17:28', sender: 'other' },
-      { text: 'Mình không thể trả lời cho cậu ngay nhưng vui lòng hỏi mình bất cứ điều gì cậu cần nhé!', time: '17:29', sender: 'me' },
-      { image: 'https://anhcuoiviet.vn/wp-content/uploads/2022/09/de-thuong-2.jpg', time: '17:30', sender: 'me' },
+
    ]);
    const [newMessage, setNewMessage] = useState('');
    const [show, setShow] = useState(false);
@@ -208,10 +204,10 @@ function ChatUI() {
    };
 
    return (
-      <div style={{ width: "68%", height: "75vh" }} >
+      <div style={{ width: "68%", }} >
          <Row>
             <Col md={12} >
-               <Card className="mb-3" style={{ background: "#f5f5f9" }}>
+               <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh" }}>
                   <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
                      <div style={{ display: "flex", gap: "10px" }}>
                         <div>
@@ -233,7 +229,7 @@ function ChatUI() {
                         onClick={handleShow}
                      />
                   </Card.Header>
-                  <Card.Body style={{ height: '53vh', overflowY: 'auto' }}>
+                  <Card.Body style={{ height: '55vh', overflowY: 'auto' }}>
                      {messages.map((msg, index) => (
                         <div
                            key={index}
