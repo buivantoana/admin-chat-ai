@@ -48,7 +48,7 @@ const BranchView = () => {
                {/* Phần FAQ header giữ nguyên */}
                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                   <div>
-                     <h4>Danh sách nhân viên</h4>
+                     <h4>Chi nhánh/cửa hàng</h4>
                   </div>
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                      <div>
