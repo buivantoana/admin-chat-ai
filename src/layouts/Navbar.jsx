@@ -1,5 +1,7 @@
+import { useNavigate } from 'react-router-dom';
 import getGreetingMessage from '../utils/greetingHandler';
 const Navbar = () => {
+  const navigate = useNavigate()
   return (
     <nav
       className="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
@@ -16,7 +18,7 @@ const Navbar = () => {
           <li className="nav-item navbar-dropdown dropdown-user dropdown">
             <a aria-label='dropdown profile avatar' className="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
               <div className="avatar avatar-online">
-                <img src="../assets/img/avatars/1.png" className="w-px-40 h-auto rounded-circle" alt="avatar-image" aria-label='Avatar Image'/>
+                <img src="../assets/img/avatars/1.png" className="w-px-40 h-auto rounded-circle" alt="avatar-image" aria-label='Avatar Image' />
               </div>
             </a>
             <ul className="dropdown-menu dropdown-menu-end">
@@ -63,10 +65,15 @@ const Navbar = () => {
                 <div className="dropdown-divider"></div>
               </li>
               <li>
-                <a aria-label='click to log out' className="dropdown-item" href="#">
+                <p onClick={() => {
+                  localStorage.removeItem("token")
+                  localStorage.removeItem("bots")
+                  localStorage.removeItem("managed_users")
+                  navigate("/login")
+                }} style={{ cursor: "pointer" }} className="dropdown-item" >
                   <i className="bx bx-power-off me-2"></i>
                   <span className="align-middle">Log Out</span>
-                </a>
+                </p>
               </li>
             </ul>
           </li>
