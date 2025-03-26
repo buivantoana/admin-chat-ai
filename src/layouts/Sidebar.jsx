@@ -43,7 +43,17 @@ const MenuItem = (item) => {
     const isActive = location.pathname === item.link;
     const hasSubmenu = item.submenu && item.submenu.length > 0;
     const isSubmenuActive = hasSubmenu && item.submenu.some(subitem => location.pathname === subitem.link);
-
+    if (item.text == "Đào tạo chatbot") {
+        if (localStorage.getItem("bots")) {
+            item['submenu'] = JSON.parse(localStorage.getItem("bots")).map((item) => {
+                return {
+                    "text": item.name,
+                    "available": true,
+                    "link": `/chatbot-training?id=${item.bid}`
+                }
+            })
+        }
+    }
     return (
         <li className={`menu-item ${isActive || isSubmenuActive ? 'active' : ''} ${hasSubmenu && isSubmenuActive ? 'open' : ''}`}>
             <NavLink

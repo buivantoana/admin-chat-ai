@@ -1,0 +1,1 @@
+export const url_api = "https://vp.zeezoo.mobi:8188";

@@ -1,21 +1,16 @@
-import React, { useState } from 'react'
-import { Button, Col, Container, Form, Pagination, Row, Table } from 'react-bootstrap';
-import { FaEdit, FaSortAmountDownAlt, FaSortAmountUp, FaTrash } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { Button, Container, Form, Pagination, Table } from 'react-bootstrap';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-const StaffView = () => {
+const StaffView = ({ staff, setShowModal }) => {
 
-   const [faqs, setFaqs] = useState([
-      { id: 1, name: 'Toản', role: 'admin', status: true },
-   ]);
 
    // State cho phân trang
    const [currentPage, setCurrentPage] = useState(1);
-   const [itemsPerPage, setItemsPerPage] = useState(10); // Mặc định 10 item mỗi trang
+   const [itemsPerPage, setItemsPerPage] = useState(5); // Mặc định 10 item mỗi trang
 
    // Hàm xóa FAQ
-   const handleDeleteFAQ = (id) => {
-      setFaqs(faqs.filter((faq) => faq.id !== id));
-   };
+
 
    // Hàm chỉnh sửa FAQ
    const handleEditFAQ = (id) => {
@@ -25,8 +20,8 @@ const StaffView = () => {
    // Tính toán phân trang
    const indexOfLastItem = currentPage * itemsPerPage;
    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-   const currentItems = faqs.slice(indexOfFirstItem, indexOfLastItem);
-   const totalPages = Math.ceil(faqs.length / itemsPerPage);
+   const currentItems = staff.slice(indexOfFirstItem, indexOfLastItem);
+   const totalPages = Math.ceil(staff.length / itemsPerPage);
 
    // Hàm thay đổi trang
    const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -48,7 +43,7 @@ const StaffView = () => {
             </div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                <div>
-                  <Button variant="primary" style={{ fontSize: "13px", padding: "5px 7px" }}>
+                  <Button onClick={() => setShowModal(true)} variant="primary" style={{ fontSize: "13px", padding: "5px 7px" }}>
                      Thêm nhân viên
                   </Button>
                </div>
@@ -60,7 +55,7 @@ const StaffView = () => {
             <thead>
                <tr>
 
-                  <th>Tên</th>
+                  <th>Email</th>
                   <th>Vai trò</th>
 
                   <th>Hoạt động</th>
@@ -68,14 +63,14 @@ const StaffView = () => {
             </thead>
             <tbody>
                {currentItems.map((faq) => (
-                  <tr key={faq.id}>
-                     <td>{faq.name}</td>
+                  <tr key={faq.uid}>
+                     <td>{faq.email}</td>
                      <td>{faq.role}</td>
                      <td>
                         <Button variant="link" onClick={() => handleEditFAQ(faq.id)} className="text-primary">
                            <FaEdit />
                         </Button>
-                        <Button variant="link" onClick={() => handleDeleteFAQ(faq.id)} className="text-danger">
+                        <Button variant="link" className="text-danger">
                            <FaTrash />
                         </Button>
                      </td>

@@ -3,12 +3,6 @@
     "header": "",
     "items": [
       {
-        "text": "Dashboard",
-        "icon": "bx bx-home",
-        "available": true,
-        "link": "/"
-      },
-      {
         "text": "Quản lý tin nhắn",
         "icon": "bx bx-chat",
         "available": true,
