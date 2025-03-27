@@ -1,11 +1,22 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, InputGroup, FormControl, ProgressBar, Dropdown, Button, Modal, Form, Badge } from "react-bootstrap";
 import { FiFilter, FiSearch, FiRepeat, FiTag, FiSend, FiLink, FiAlertCircle, FiMoreHorizontal } from "react-icons/fi";
-const MessageManagementView = () => {
+import inbox from "../../images/ic_dashboard_inbox.webp";
+import facebook from "../../images/ic_dashboard_messenger.webp";
+import zalo from "../../images/ic_dashboard_zalo.webp";
+import website from "../../images/ic_website.webp";
+const MessageManagementView = ({ botChat }) => {
+   const [chat, setChat] = useState(null)
+   useEffect(() => {
+      if (!chat) return;
+
+      const foundChat = botChat.find((item) => item.cid === chat.cid) || null;
+      setChat(foundChat);
+   }, [botChat]);
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-         <ChatSidebar />
-         <ChatUI />
+         <ChatSidebar botChat={botChat} setChat={setChat} chat={chat} />
+         <ChatUI chat={chat} />
       </div>
    )
 }
@@ -14,9 +25,9 @@ export default MessageManagementView
 
 
 
-const ChatSidebar = () => {
+const ChatSidebar = ({ botChat, setChat, chat }) => {
    const [show, setShow] = useState(false);
-
+   const [chatChanel, setChatChanel] = useState('inbox');
    const handleShow = () => setShow(true);
    const handleClose = () => setShow(false);
    return (
@@ -26,11 +37,16 @@ const ChatSidebar = () => {
             <h5 className="mb-0">Chat</h5>
             <Dropdown>
                <Dropdown.Toggle variant="link" className="text-dark p-0">
-                  Tất cả kênh chat
+                  {chatChanel == "inbox" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={inbox} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Tất cả kênh chat</div>}
+                  {chatChanel == "facebook" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div>}
+                  {chatChanel == "zalo" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={zalo} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Zalo</div>}
+                  {chatChanel == "website" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div>}
                </Dropdown.Toggle>
                <Dropdown.Menu>
-                  <Dropdown.Item>Kênh 1</Dropdown.Item>
-                  <Dropdown.Item>Kênh 2</Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("inbox")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={inbox} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Tất cả kênh chat</div></Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("facebook")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div></Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("zalo")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={zalo} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Zalo</div></Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("website")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div></Dropdown.Item>
                </Dropdown.Menu>
             </Dropdown>
          </div>
@@ -45,7 +61,7 @@ const ChatSidebar = () => {
          <div className="mb-3">
             <div className="d-flex justify-content-between text-muted small">
                <span>Cuộc hội thoại</span>
-               <span>2 / 2.000</span>
+               <span>{botChat.length} / 2.000</span>
             </div>
             <ProgressBar now={2} max={2000} variant="purple" style={{ height: "5px" }} />
          </div>
@@ -61,33 +77,40 @@ const ChatSidebar = () => {
          </div>
 
          {/* Chat Item */}
-         <Card className="mb-2 p-2" style={{ backgroundColor: "#f5e8ff", borderRadius: "8px", marginTop: "18px" }}>
-            <div className="d-flex align-items-center">
-               <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                  style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                  B
-               </div>
-               <div className="ms-2">
-                  <div style={{ display: "flex", justifyContent: "space-between", }}>
-                     <div className="fw-bold">bui văn toàn - 034522...</div>
-                     <Dropdown key={"none"} className="custom-dropdown" style={{ marginLeft: "40px" }}>
-                        <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
-                           <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                           <Dropdown.Item>Bỏ xem</Dropdown.Item>
-                           <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
-                        </Dropdown.Menu>
-                     </Dropdown>
-                  </div>
-                  <small className="text-muted">Mình không thể trả lời cho...</small>
-               </div>
-            </div>
-            <div className="mt-1 d-flex align-items-center">
-               <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+         <div className='card-hover3' style={{ height: "45vh", overflowY: "scroll" }}>
+            {botChat && botChat.length > 0 && botChat.map((item) => {
+               return <Card onClick={() => setChat(item)} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+                  <div className="d-flex align-items-center">
+                     <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                        style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
+                        B
+                     </div>
+                     <div className="ms-2">
+                        <div style={{ display: "flex", justifyContent: "space-between", }}>
+                           <div className="fw-bold">Bot</div>
 
-            </div>
-         </Card>
+                        </div>
+                        <small className="text-muted">Mình không thể trả lời cho...</small>
+                     </div>
+                  </div>
+                  <div className="mt-1 d-flex align-items-center">
+                     <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+
+                  </div>
+                  <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
+                     <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
+                        <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
+                     </Dropdown.Toggle>
+                     <Dropdown.Menu>
+                        <Dropdown.Item>Bỏ xem</Dropdown.Item>
+                        <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
+                     </Dropdown.Menu>
+                  </Dropdown>
+               </Card>
+            })}
+
+         </div>
+
          <Modal show={show} onHide={handleClose} centered size="lg">
             <Modal.Header closeButton>
                <Modal.Title><b>Lọc</b></Modal.Title>
@@ -153,23 +176,27 @@ const ChatSidebar = () => {
 import { Row, Col } from 'react-bootstrap';
 import { useRef } from 'react'; // Thêm useRef để tham chiếu input
 import Offcanvas from 'react-bootstrap/Offcanvas';
-
-function ChatUI() {
-   const [messages, setMessages] = useState([
-      { text: 'hello', time: '17:28', sender: 'other' },
-      { text: 'Mình không thể trả lời cho cậu ngay nhưng vui lòng hỏi mình bất cứ điều gì cậu cần nhé!', time: '17:29', sender: 'me' },
-      { image: 'https://anhcuoiviet.vn/wp-content/uploads/2022/09/de-thuong-2.jpg', time: '17:30', sender: 'me' },
-      { text: 'hello', time: '17:28', sender: 'other' },
-
-   ]);
+import nochat from "../../images/img_no_message.webp"
+function ChatUI({ chat }) {
+   const [messages, setMessages] = useState(chat && chat.messages ? chat.messages : []);
    const [newMessage, setNewMessage] = useState('');
    const [show, setShow] = useState(false);
    const fileInputRef = useRef(null); // Tham chiếu đến input file
 
+   useEffect(() => {
+      if (chat) {
+         setMessages(chat.messages)
+      }
+   }, [chat])
+
+
+
+
+
    const handleSendMessage = (e) => {
       e.preventDefault();
       if (newMessage.trim()) {
-         setMessages([...messages, { text: newMessage, time: '17:31', sender: 'me' }]);
+         setMessages([...messages, { content: newMessage, time: '17:31', role: 'assistant' }]);
          setNewMessage('');
       }
    };
@@ -202,122 +229,117 @@ function ChatUI() {
    const triggerFileInput = () => {
       fileInputRef.current.click();
    };
-
+   console.log(messages);
    return (
-      <div style={{ width: "68%", }} >
-         <Row>
-            <Col md={12} >
-               <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh" }}>
-                  <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
-                     <div style={{ display: "flex", gap: "10px" }}>
-                        <div>
-                           <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                              style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                              B
-                           </div>
-                           <p style={{ padding: "0 2px", background: "rgb(173, 216, 230)", borderRadius: "5px", fontSize: "11px", margin: 0, marginTop: "2px", color: "white" }}>Tư vấn</p>
-                        </div>
-                        <div>
-                           <strong>Bùi Văn Toản - 0345282233 <FiTag /></strong>
-                           <p style={{ fontSize: "13px" }}>Website</p>
-                        </div>
+      <>
+         {!chat && <div style={{ width: "68%" }} >
+            <Row>
+               <Col md={12} >
+                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                     <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center", gap: "15px" }}>
+                        <img src={nochat} alt="" />
+                        <h5 style={{ fontWeight: "bold" }}>Cuộc hội thoại sẽ xuất hiện ở đây</h5>
                      </div>
-                     <AutoReplyToggle />
-                     <FiAlertCircle
-                        style={{ cursor: "pointer" }}
-                        size={23}
-                        onClick={handleShow}
-                     />
-                  </Card.Header>
-                  <Card.Body style={{ height: '55vh', overflowY: 'auto' }}>
-                     {messages.map((msg, index) => (
-                        <div
-                           key={index}
-                           className={`d-flex mb-2 mt-1 ${msg.sender === 'me' ? 'justify-content-end' : 'justify-content-start'}`}
-                        >
-                           <div
-                              className={`p-2 rounded ${msg.sender === 'me' ? 'bg-primary text-white' : 'bg-white'}`}
-                              style={{ maxWidth: '70%' }}
-                           >
-                              {msg.text && <p className="mb-0">{msg.text}</p>}
-                              {msg.image && <img src={msg.image} alt="attachment" className="img-fluid rounded" />}
-                              {msg.video && (
-                                 <video controls className="img-fluid rounded">
-                                    <source src={msg.video} type="video/mp4" />
-                                    Your browser does not support the video tag.
-                                 </video>
-                              )}
-                              <small className="text-muted">{msg.time}</small>
-                           </div>
-                        </div>
-                     ))}
-                  </Card.Body>
-                  <Card.Footer style={{ background: "white" }}>
-                     <Form onSubmit={handleSendMessage}>
-                        <InputGroup>
-                           <Form.Control
-                              type="text"
-                              placeholder="Nhập tin nhắn của bạn"
-                              value={newMessage}
-                              onChange={(e) => setNewMessage(e.target.value)}
-                           />
-                           {/* Nút với icon FiLink để tải file */}
-                           <Button variant="outline-secondary" onClick={triggerFileInput}>
-                              <FiLink />
-                           </Button>
-                           {/* Input file ẩn */}
-                           <input
-                              type="file"
-                              ref={fileInputRef}
-                              style={{ display: 'none' }}
-                              accept="image/*,video/*" // Chỉ chấp nhận image và video
-                              onChange={handleFileUpload}
-                           />
-                           <Button variant="primary" type="submit">
-                              <FiSend />
-                           </Button>
-                        </InputGroup>
-                     </Form>
-                  </Card.Footer>
-               </Card>
-            </Col>
-         </Row>
 
-         <Offcanvas show={show} onHide={handleClose} placement="end">
-            <Offcanvas.Header closeButton>
-               <Offcanvas.Title>Thông tin</Offcanvas.Title>
-            </Offcanvas.Header>
-            <Offcanvas.Body>
-               <Card>
-                  <Card.Body>
-                     <h5>Bùi Văn Toản</h5>
-                     <p>Website</p>
-                     <hr />
-                     <Form.Group className="mb-3">
-                        <Form.Label>Tag</Form.Label>
-                        <Form.Select>
-                           <option>Đang tương tác</option>
-                        </Form.Select>
-                     </Form.Group>
-                     <Form.Group className="mb-3">
-                        <Form.Label>Trang thái</Form.Label>
-                        <Form.Select>
-                           <option>Tư vấn</option>
-                        </Form.Select>
-                     </Form.Group>
-                     <Form.Group className="mb-3">
-                        <Form.Label>Note</Form.Label>
-                        <Form.Control as="textarea" rows={3} />
-                     </Form.Group>
-                     <div className="d-flex justify-content-between">
-                        <Button variant="outline-danger">Đóng</Button>
-                        <Button variant="primary">Lưu</Button>
-                     </div>
-                  </Card.Body>
-               </Card>
-            </Offcanvas.Body>
-         </Offcanvas>
-      </div>
+                  </Card>
+               </Col>
+            </Row>
+
+
+         </div>}
+         {chat && <div style={{ width: "68%" }} >
+            <Row>
+               <Col md={12} >
+                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh" }}>
+                     <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
+                        <div style={{ display: "flex", gap: "10px" }}>
+                           <div>
+                              <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                                 style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
+                                 B
+                              </div>
+                              <p style={{ padding: "0 2px", background: "rgb(173, 216, 230)", borderRadius: "5px", fontSize: "11px", margin: 0, marginTop: "2px", color: "white" }}>Tư vấn</p>
+                           </div>
+                           <div>
+                              <strong>Bot <FiTag /></strong>
+                              <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
+                           </div>
+                        </div>
+                        <AutoReplyToggle />
+                        <FiAlertCircle
+                           style={{ cursor: "pointer" }}
+                           size={23}
+                           onClick={handleShow}
+                        />
+                     </Card.Header>
+                     <ChatComponent messages={messages} />
+                     <Card.Footer style={{ background: "white" }}>
+                        <Form onSubmit={handleSendMessage}>
+                           <InputGroup>
+                              <Form.Control
+                                 type="text"
+                                 placeholder="Nhập tin nhắn của bạn"
+                                 value={newMessage}
+                                 onChange={(e) => setNewMessage(e.target.value)}
+                              />
+                              {/* Nút với icon FiLink để tải file */}
+                              <Button variant="outline-secondary" onClick={triggerFileInput}>
+                                 <FiLink />
+                              </Button>
+                              {/* Input file ẩn */}
+                              <input
+                                 type="file"
+                                 ref={fileInputRef}
+                                 style={{ display: 'none' }}
+                                 accept="image/*,video/*" // Chỉ chấp nhận image và video
+                                 onChange={handleFileUpload}
+                              />
+                              <Button variant="primary" type="submit">
+                                 <FiSend />
+                              </Button>
+                           </InputGroup>
+                        </Form>
+                     </Card.Footer>
+                  </Card>
+               </Col>
+            </Row>
+
+            <Offcanvas show={show} onHide={handleClose} placement="end">
+               <Offcanvas.Header closeButton>
+                  <Offcanvas.Title>Thông tin</Offcanvas.Title>
+               </Offcanvas.Header>
+               <Offcanvas.Body>
+                  <Card>
+                     <Card.Body>
+                        <h5>Bùi Văn Toản</h5>
+                        <p>Website</p>
+                        <hr />
+                        <Form.Group className="mb-3">
+                           <Form.Label>Tag</Form.Label>
+                           <Form.Select>
+                              <option>Đang tương tác</option>
+                           </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                           <Form.Label>Trang thái</Form.Label>
+                           <Form.Select>
+                              <option>Tư vấn</option>
+                           </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                           <Form.Label>Note</Form.Label>
+                           <Form.Control as="textarea" rows={3} />
+                        </Form.Group>
+                        <div className="d-flex justify-content-between">
+                           <Button variant="outline-danger">Đóng</Button>
+                           <Button variant="primary">Lưu</Button>
+                        </div>
+                     </Card.Body>
+                  </Card>
+               </Offcanvas.Body>
+            </Offcanvas>
+         </div>}
+      </>
    );
 }
 
@@ -380,6 +402,48 @@ const AutoReplyToggle = () => {
       </Dropdown>
    );
 };
+
+
+
+
+const ChatComponent = ({ messages }) => {
+   const chatRef = useRef(null);
+
+   // ✅ Khi vào màn hình hoặc có tin nhắn mới, luôn cuộn xuống dưới cùng
+   useEffect(() => {
+      if (chatRef.current) {
+         chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
+   }, [messages]); // Chạy mỗi khi messages thay đổi
+
+   return (
+      <Card.Body ref={chatRef} style={{ height: "55vh", overflowY: "auto" }}>
+         {messages.map((msg, index) => (
+            <div
+               key={index}
+               className={`d-flex mb-2 mt-1 ${msg.role === "assistant" ? "justify-content-end" : "justify-content-start"}`}
+            >
+               <div
+                  className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"}`}
+                  style={{ maxWidth: "70%" }}
+               >
+                  {msg.content && msg.role !== "system" && <p className="mb-0">{msg.content}</p>}
+                  {msg.image && <img src={msg.image} alt="attachment" className="img-fluid rounded" />}
+                  {msg.video && (
+                     <video controls className="img-fluid rounded">
+                        <source src={msg.video} type="video/mp4" />
+                        Your browser does not support the video tag.
+                     </video>
+                  )}
+                  <small>{msg.created ? msg.created.split("T")[1].split(":").slice(0, 2).join(":") : ""}</small>
+               </div>
+            </div>
+         ))}
+      </Card.Body>
+   );
+};
+
+
 
 
 

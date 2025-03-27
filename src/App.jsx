@@ -10,6 +10,7 @@ import "./App.css"
 function App() {
   const location = useLocation();
   const isAuthPath = location.pathname.includes("auth") || location.pathname.includes("error") || location.pathname.includes("under-maintenance") | location.pathname.includes("blank");
+ 
   return (
     <>
       {isAuthPath ? (

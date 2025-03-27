@@ -49,7 +49,7 @@ const MenuItem = (item) => {
                 return {
                     "text": item.name,
                     "available": true,
-                    "link": `/message-management?id=${item.bid}`
+                    "link": `/message-management/bot/${item.bid}`
                 }
             })
         }

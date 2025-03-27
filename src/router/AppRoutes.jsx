@@ -16,6 +16,7 @@ import BranchController from "../pages/chatbot/BranchController";
 import ChatController from "../pages/chatbot/ChatController";
 import { LoginPage } from "../pages/authentication/LoginPage"
 import Layout from "../layouts/Layout";
+import { useEffect, useState } from "react";
 
 const isAuthenticated = () => {
     return localStorage.getItem("token");
@@ -26,6 +27,7 @@ const PrivateRoute = ({ element }) => {
 };
 
 const AppRoutes = () => {
+
     return (
         <>
             <Routes>
@@ -35,7 +37,7 @@ const AppRoutes = () => {
                 {/* Các trang cần đăng nhập, bọc trong Layout */}
                 <Route path="/" element={<PrivateRoute element={<Layout />} />}>
                     {/* <Route index element={<DashboardPage />} /> */}
-                    <Route index path="message-management" element={<MessageManagementController />} />
+                    <Route index path="message-management/bot/:id" element={<MessageManagementController />} />
                     <Route path="chatbot-training" element={<ChatBotController />} />
                     <Route path="overview" element={<OverViewController />} />
                     <Route path="training-data" element={<DataTrainingController />} />
