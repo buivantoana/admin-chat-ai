@@ -3,7 +3,7 @@ import { Button, Card, Container, Dropdown, Modal, ToggleButton } from "react-bo
 import { FiGrid, FiImage, FiList, FiSettings, FiTrash2 } from "react-icons/fi";
 
 
-const ChatBotView = () => {
+const ChatBotView = ({bots}) => {
    const [view, setView] = useState("grid");
    const [show, setShow] = useState(false);
    const [createChatBot, setCreateChatBot] = useState(false);
@@ -33,10 +33,12 @@ const ChatBotView = () => {
          </div>
 
          {view === "grid" ? (
-            <div className="row">
-               <div className="col-md-4">
-                  <Card className="border-primary" style={{ cursor: "pointer", border: "1px solid #ddd" }}>
+            <div className="row" >
+               {bots.length&& bots.map((item,indx)=>{
+                  return  <div className="col-md-4" style={{marginTop:"10px"}}>
+                  <Card className="border-primary card-hover" style={{ cursor: "pointer", border: "1px solid #ddd" }}>
                      <Card.Body>
+                        <div style={{display:"flex",justifyContent:"space-between"}}>
                         <div className="d-flex align-items-center" onClick={handleNavigate}>
                            <img
                               src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
@@ -46,10 +48,14 @@ const ChatBotView = () => {
                               alt="avatar"
                            />
                            <div>
-                              <strong>bot-demo</strong>
-                              <div className="text-muted">Cập nhật 21/03/25 - 11:03 AM</div>
+                              <strong>{item.name}</strong>
+
+                              <div className="text-muted">{item.created}</div>
                            </div>
                         </div>
+                            <img src={item.language == "vi" ?'https://flagcdn.com/w320/vn.png':""} width={30} height={20} style={{borderRadius:"5px"}} alt="" />
+                        </div>
+                        
                         <div className="d-flex justify-content-end mt-2">
                            <Button variant="outline-dark" size="sm" className="me-2">
                               <FiSettings />
@@ -62,39 +68,46 @@ const ChatBotView = () => {
                      </Card.Body>
                   </Card>
                </div>
+               })}
+              
             </div>
          ) : (
             <table style={{ background: "white", borderRadius: "10px", boxShadow: "0 2px 6px 0 rgba(67, 89, 113, 0.12)", cursor: "pointer" }} className="table">
                <thead>
                   <tr>
                      <th>Tên</th>
+                     <th>Ngôn ngữ</th>
                      <th>Cập nhật ngày</th>
                      <th>Hoạt động</th>
                   </tr>
                </thead>
                <tbody>
-                  <tr>
-                     <td onClick={handleNavigate}>
-                        <img
-                           src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
-                           width={50}
-                           height={50}
-                           className="rounded-circle me-2"
-                           alt="avatar"
-                        />
-                        bot-demo
-                     </td>
-                     <td>21/03/2025 11:28 AM</td>
-                     <td>
-                        <Button variant="outline-dark" size="sm" className="me-2">
-                           <FiSettings />
-                        </Button>
-                        <Button variant="outline-danger" onClick={handleShow} size="sm">
-                           <FiTrash2 />
+               {bots.length&& bots.map((item)=>{
+                  return <tr>
+                  <td onClick={handleNavigate}>
+                     <img
+                        src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
+                        width={50}
+                        height={50}
+                        className="rounded-circle me-2"
+                        alt="avatar"
+                     />
+                     {item.name}
+                  </td>
+                  <td><img src={item.language == "vi" ?'https://flagcdn.com/w320/vn.png':""} width={30} height={20} style={{borderRadius:"5px"}} alt="" /></td>
+                  <td>{item.created}</td>
+                  <td>
+                     <Button variant="outline-dark" size="sm" className="me-2">
+                        <FiSettings />
+                     </Button>
+                     <Button variant="outline-danger" onClick={handleShow} size="sm">
+                        <FiTrash2 />
 
-                        </Button>
-                     </td>
-                  </tr>
+                     </Button>
+                  </td>
+               </tr>
+               })}
+                  
                </tbody>
             </table>
          )}
