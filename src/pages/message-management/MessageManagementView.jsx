@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Card, InputGroup, FormControl, ProgressBar, Dropdown, Button, Modal, Form, Badge } from "react-bootstrap";
+import { Card, InputGroup, FormControl, ProgressBar, Dropdown, Button, Modal, Form, Badge, Spinner } from "react-bootstrap";
 import { FiFilter, FiSearch, FiRepeat, FiTag, FiSend, FiLink, FiAlertCircle, FiMoreHorizontal } from "react-icons/fi";
 import inbox from "../../images/ic_dashboard_inbox.webp";
 import facebook from "../../images/ic_dashboard_messenger.webp";
 import zalo from "../../images/ic_dashboard_zalo.webp";
 import website from "../../images/ic_website.webp";
-const MessageManagementView = ({ botChat }) => {
+const MessageManagementView = ({ botChat ,setChatBot}) => {
    const [chat, setChat] = useState(null)
    useEffect(() => {
       if (!chat) return;
@@ -16,7 +16,7 @@ const MessageManagementView = ({ botChat }) => {
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
          <ChatSidebar botChat={botChat} setChat={setChat} chat={chat} />
-         <ChatUI chat={chat} />
+         <ChatUI chat={chat}  setChatBot={setChatBot} />
       </div>
    )
 }
@@ -177,7 +177,7 @@ import { Row, Col } from 'react-bootstrap';
 import { useRef } from 'react'; // Thêm useRef để tham chiếu input
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import nochat from "../../images/img_no_message.webp"
-function ChatUI({ chat }) {
+function ChatUI({ chat,setChatBot }) {
    const [messages, setMessages] = useState(chat && chat.messages ? chat.messages : []);
    const [newMessage, setNewMessage] = useState('');
    const [show, setShow] = useState(false);
@@ -265,7 +265,7 @@ function ChatUI({ chat }) {
                               <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
                            </div>
                         </div>
-                        <AutoReplyToggle />
+                        <AutoReplyToggle chat={chat} setChatBot={setChatBot} />
                         <FiAlertCircle
                            style={{ cursor: "pointer" }}
                            size={23}
@@ -344,13 +344,46 @@ function ChatUI({ chat }) {
 }
 
 import { OverlayTrigger, Popover } from "react-bootstrap";
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { botChatActive } from '../../services/chat_all';
 
 
-const AutoReplyToggle = () => {
+const AutoReplyToggle = ({chat ,setChatBot}) => {
+   console.log("Auto complate",chat)
    const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
+   const [loading, setLoading] = useState(false);
+    const { id } = useParams();
+   useEffect(()=>{
+      if(chat){
+         setIsAutoReplyOn(chat.active)
+      }
+   },[chat])
 
-   const toggleAutoReply = () => {
-      setIsAutoReplyOn(!isAutoReplyOn);
+   const toggleAutoReply = async() => {
+      setLoading(true)
+      try {
+         let result = await botChatActive(id,{active:!isAutoReplyOn},chat.cid)
+         if(result && (result.active == true ||result.active == false )){
+            setIsAutoReplyOn(result.active)
+            setChatBot((prev)=>prev.map((item)=>{
+               if(item.cid == chat.cid){
+                  return {
+                     ...item,
+                     active:result.active
+                  }
+               }
+               return item
+            }))
+            toast.success(`Auto reply ${!isAutoReplyOn==true? "ON":"OFF"} Thành công` )
+         }else{
+            toast.warning(`Auto reply ${!isAutoReplyOn==true? "ON":"OFF"} Thất bại` )
+         }
+
+      } catch (error) {
+         console.log(error)
+      }
+      setLoading(false)
    };
 
    const popover = (
@@ -358,13 +391,14 @@ const AutoReplyToggle = () => {
          <Popover.Body>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
                <strong>Auto-reply</strong>
+               {loading? <Spinner size='20' color='blue' />:
                <Form.Check
                   type="switch"
                   id="auto-reply-switch"
                   label=""
                   checked={isAutoReplyOn}
                   onChange={toggleAutoReply}
-               />
+               />}
             </div>
             <p>Khi bật lên, bot sẽ tự trả lời tin nhắn của khách hàng</p>
 
@@ -435,7 +469,7 @@ const ChatComponent = ({ messages }) => {
                         Your browser does not support the video tag.
                      </video>
                   )}
-                  <small>{msg.created ? msg.created.split("T")[1].split(":").slice(0, 2).join(":") : ""}</small>
+                  {/* <small>{msg.created ? msg.created.split("T")[1].split(":").slice(0, 2).join(":") : ""}</small> */}
                </div>
             </div>
          ))}

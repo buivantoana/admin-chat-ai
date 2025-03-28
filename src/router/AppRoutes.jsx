@@ -39,7 +39,7 @@ const AppRoutes = () => {
                     {/* <Route index element={<DashboardPage />} /> */}
                     <Route index path="message-management/bot/:id" element={<MessageManagementController />} />
                     <Route path="chatbot-training" element={<ChatBotController />} />
-                    <Route path="overview" element={<OverViewController />} />
+                    <Route path="overview/:id" element={<OverViewController />} />
                     <Route path="training-data" element={<DataTrainingController />} />
                     <Route path="product" element={<ProductController />} />
                     <Route path="branch" element={<BranchController />} />

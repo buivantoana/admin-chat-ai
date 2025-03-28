@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Container, Dropdown, Modal, ToggleButton } from "react-bootstrap";
 import { FiGrid, FiImage, FiList, FiSettings, FiTrash2 } from "react-icons/fi";
 
 
-const ChatBotView = ({ bots }) => {
+const ChatBotView = ({ bots ,setLoading}) => {
    const [view, setView] = useState("grid");
    const [show, setShow] = useState(false);
    const [createChatBot, setCreateChatBot] = useState(false);
    const navigate = useNavigate()
-   const handleNavigate = () => {
-      navigate("/overview")
+   const handleNavigate = (id) => {
+      navigate(`/overview/${id}`)
    }
 
    const handleShow = () => setShow(true);
@@ -39,7 +39,7 @@ const ChatBotView = ({ bots }) => {
                      <Card className="border-primary card-hover" style={{ cursor: "pointer", border: "1px solid #ddd" }}>
                         <Card.Body>
                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <div className="d-flex align-items-center" onClick={handleNavigate}>
+                              <div className="d-flex align-items-center" onClick={()=>handleNavigate(item.bid)}>
                                  <img
                                     src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
                                     width={50}
@@ -84,7 +84,7 @@ const ChatBotView = ({ bots }) => {
                <tbody>
                   {bots.length && bots.map((item) => {
                      return <tr>
-                        <td onClick={handleNavigate}>
+                        <td onClick={()=>handleNavigate(item.bid)}>
                            <img
                               src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
                               width={50}
@@ -127,7 +127,7 @@ const ChatBotView = ({ bots }) => {
                <Button variant="danger">Xóa</Button>
             </Modal.Footer>
          </Modal>
-         <CreateChatbotModal show={createChatBot} setShow={setCreateChatBot} />
+         <CreateChatbotModal show={createChatBot} setLoading={setLoading} setShow={setCreateChatBot} />
       </Container>
    );
 };
@@ -135,121 +135,150 @@ const ChatBotView = ({ bots }) => {
 export default ChatBotView;
 import { Form, InputGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { createBot } from "../../services/bot";
+import { toast } from "react-toastify";
 
-const CreateChatbotModal = ({ show, setShow }) => {
+const CreateChatbotModal = ({ show, setShow,setLoading }) => {
    const handleClose = () => setShow(false);
-
+   const [botName, setBotName] = useState("");
+   const [info, setInfo] = useState("");
+   const [language, setLanguage] = useState("vi");
+   const [speed, setSpeed] = useState(1);
+   const [active, setActive] = useState(true);
+   const [owner, setOwner] = useState(null);
+  
+   
+   useEffect(()=>{
+      (async()=>{
+         if(localStorage.getItem('token')){
+            let decode = await jwtDecode(localStorage.getItem('token'))
+            if(Object.keys(decode).length>0){
+               setOwner(decode.email)
+            }
+         }
+      })()
+   },[localStorage.getItem('token')])
    const defaultAvatars = [
       "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png",
-
    ];
-
    const [avatars, setAvatars] = useState(defaultAvatars);
-   const [selectedAvatar, setSelectedAvatar] = useState(defaultAvatars[0]); // Ảnh mặc định đầu tiên
+   const [selectedAvatar, setSelectedAvatar] = useState(defaultAvatars[0]);
 
-   // Xử lý chọn ảnh đại diện
-   const handleSelectAvatar = (avatar) => {
-      setSelectedAvatar(avatar);
-   };
-
-   // Xử lý upload ảnh mới
+   const handleSelectAvatar = (avatar) => setSelectedAvatar(avatar);
    const handleUpload = (event) => {
       const file = event.target.files[0];
       if (file) {
          const newAvatar = URL.createObjectURL(file);
-         setAvatars((prev) => [newAvatar, ...prev]); // Thêm ảnh vào danh sách
-         setSelectedAvatar(newAvatar); // Chọn ảnh vừa upload
+         setAvatars((prev) => [newAvatar, ...prev]);
+         setSelectedAvatar(newAvatar);
       }
    };
 
+   const handleSave =   async () => {
+      setLoading(true)
+      const payload = {
+         name: botName,
+         owner: owner,
+         // avatar: selectedAvatar || null,
+         info: info,
+         language: language,
+         speed: speed,
+         active: active,
+         created: new Date().toISOString(),
+      };
+      try {
+         let result = await createBot(payload)
+         if(result && result.message){
+            toast.success("Tạo Bot thành công")
+            setBotName("")
+            setInfo("")
+            handleClose()
+         }
+      } catch (error) {
+        console.log(error) 
+      }
+    
+      setLoading(false)
+   };
+
    return (
-      <>
-         <Modal show={show} onHide={handleClose} size="lg">
-            <Modal.Header closeButton>
-               <Modal.Title>Tạo chatbot</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-               <div className="row">
-                  {/* Cột trái - Chi tiết bot */}
-                  <div className="col-md-6">
-                     <h5>Chi tiết bot</h5>
+      <Modal show={show} onHide={handleClose} size="lg">
+         <Modal.Header closeButton>
+            <Modal.Title>Tạo chatbot</Modal.Title>
+         </Modal.Header>
+         <Modal.Body>
+            <div className="row">
+               <div className="col-md-6">
+                  <h5>Chi tiết bot</h5>
+                  <Form.Group className="mb-3">
+                     <Form.Label>Tên bot</Form.Label>
+                     <Form.Control value={botName} onChange={(e) => setBotName(e.target.value)} placeholder="Chọn tên bot" maxLength={50} />
+                  </Form.Group>
 
-                     {/* Tên bot */}
-                     <Form.Group className="mb-3">
-                        <Form.Label>Tên bot</Form.Label>
-                        <InputGroup>
-                           <Form.Control placeholder="Chọn tên bot" maxLength={50} />
-                           <InputGroup.Text>0/50</InputGroup.Text>
-                        </InputGroup>
-                     </Form.Group>
+                  <Form.Group className="mb-3">
+                     <Form.Label>Ảnh đại diện</Form.Label>
+                     <div className="d-flex align-items-center">
+                        <label className="btn btn-light rounded-circle p-2 me-2" style={{ cursor: "pointer" }}>
+                           <FiImage size={25} />
+                           <input type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
+                        </label>
+                        {avatars.map((avatar, index) => (
+                           <img key={index} src={avatar} alt="Avatar" className={`rounded-circle me-2 ${selectedAvatar === avatar ? "border border-primary" : ""}`} width={50} height={50} style={{ cursor: "pointer", objectFit: "cover" }} onClick={() => handleSelectAvatar(avatar)} />
+                        ))}
+                     </div>
+                  </Form.Group>
 
-                     {/* Ảnh đại diện */}
-                     <Form.Group className="mb-3">
-                        <Form.Label>Ảnh đại diện</Form.Label>
-                        <div className="d-flex align-items-center">
-                           {/* Nút Upload ảnh */}
-                           <label className="btn btn-light rounded-circle p-2 me-2" style={{ cursor: "pointer" }}>
-                              <FiImage size={25} />
-                              <input type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
-                           </label>
+                  <Form.Group className="mb-3">
+                     <Form.Label>Giới thiệu</Form.Label>
+                     <Form.Control value={info} onChange={(e) => setInfo(e.target.value)} placeholder="Giới thiệu" />
+                  </Form.Group>
 
-                           {/* Danh sách ảnh đại diện */}
-                           {avatars.map((avatar, index) => (
-                              <img
-                                 key={index}
-                                 src={avatar}
-                                 alt="Avatar"
-                                 className={`rounded-circle me-2 ${selectedAvatar === avatar ? "border border-primary" : ""}`}
-                                 width={50}
-                                 height={50}
-                                 style={{ cursor: "pointer", objectFit: "cover" }}
-                                 onClick={() => handleSelectAvatar(avatar)}
-                              />
-                           ))}
-                        </div>
-                     </Form.Group>
+                  <Form.Group className="mb-3">
+                     <Form.Label>Tốc độ Bot trả lời</Form.Label>
+                     <Form.Select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+                        <option value={1}>Chậm (Mặc định)</option>
+                        <option value={2}>Nhanh</option>
+                     </Form.Select>
+                  </Form.Group>
 
-                     {/* Câu chào hỏi */}
-                     <Form.Group className="mb-3">
-                        <Form.Label>Câu chào hỏi</Form.Label>
-                        <InputGroup>
-                           <Form.Control placeholder="👋 Hello! How can I help you today?" maxLength={200} />
-                           <InputGroup.Text>0/200</InputGroup.Text>
-                        </InputGroup>
-                     </Form.Group>
+                  <Form.Group className="mb-3">
+                     <Form.Label>Ngôn ngữ</Form.Label>
+                     <Form.Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">English</option>
+                     </Form.Select>
+                  </Form.Group>
 
-                     {/* Danh sách ngành nghề */}
-                     <Form.Group className="mb-3">
-                        <Form.Label>Danh sách ngành nghề</Form.Label>
-                        <Form.Select>
-                           <option>Lựa chọn ngành nghề</option>
-                           <option>Ngành A</option>
-                           <option>Ngành B</option>
-                        </Form.Select>
-                     </Form.Group>
-                  </div>
-
-                  {/* Cột phải - Kịch bản mẫu */}
-                  <div className="col-md-6">
+                  <Form.Group className="mb-3">
+                     <Form.Label>Auto Reply</Form.Label>
+                     <Form.Select value={active} onChange={(e) => setActive(e.target.value === "true")}>
+                        <option value="true">Active</option>
+                        <option value="false">Deactive</option>
+                     </Form.Select>
+                  </Form.Group>
+               </div>
+               <div className="col-md-6">
                      <h5>Kịch bản mẫu</h5>
                      <div className="p-3 bg-light border rounded">
                         <p className="text-muted">
-                           Preny cung cấp kịch bản mẫu tối ưu cho từng ngành nghề, giúp bạn dễ dàng chốt sales với các câu hỏi phổ biến nhất.
+                           Chat Bot AI cung cấp kịch bản mẫu tối ưu cho từng ngành nghề, giúp bạn dễ dàng chốt sales với các câu hỏi phổ biến nhất.
                            Bạn có thể sử dụng ngay bằng việc tích chọn kịch bản sẵn, tùy chỉnh hoặc tự tạo kịch bản riêng tại mục
                            <strong> "Kịch bản chốt sales"</strong>. Cảm ơn bạn!
                         </p>
                      </div>
                   </div>
-               </div>
-            </Modal.Body>
-            <Modal.Footer>
-               <Button variant="secondary" onClick={handleClose}>
-                  Hủy
-               </Button>
-               <Button variant="primary">Lưu</Button>
-            </Modal.Footer>
-         </Modal>
-      </>
+            </div>
+         </Modal.Body>
+         <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+               Hủy
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
+               Lưu
+            </Button>
+         </Modal.Footer>
+      </Modal>
    );
 };
 

@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Sidebar from './SideBar'
 
-const OverViewView = () => {
+const OverViewView = ({setLoading}) => {
    return (
       <div style={{ display: "flex" }}><Sidebar />
          <div style={{ width: "75%", background: "white", borderBottomRightRadius: "10px", borderTopRightRadius: "10px", paddingTop: "20px", height: "77vh", overflowY: "scroll" }}>
-            <ChatBot />
+            <ChatBot setLoading={setLoading} />
          </div>
       </div>
    )
@@ -16,19 +16,70 @@ import { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Dropdown, InputGroup } from 'react-bootstrap';
 
 
-const ChatBot = () => {
+const ChatBot = ({setLoading}) => {
+   const { id } = useParams();
+   const [bot, setBot] = useState(null);
    const [avatar, setAvatar] = useState("https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png");
+   const [botName, setBotName] = useState("");
+   const [info, setInfo] = useState("");
+   const [language, setLanguage] = useState("vi");
+   const [speed, setSpeed] = useState(1);
+  
 
-   // Xử lý chọn ảnh mới
+   useEffect(() => {
+      if (id) {
+         (async () => {
+            setLoading(true)
+            try {
+               let result = await getBot(id);
+               if (result && Object.keys(result).length > 0) {
+                  setBot(result);
+                  setBotName(result.name || ""); 
+                  setInfo(result.info || "");
+                  setLanguage(result.language || "vi");
+                  setSpeed(result.speed || 1);
+                  setAvatar(result.avatar || "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png");
+                  
+               }
+            } catch (error) {
+               console.log(error);
+            }
+            setLoading(false)
+         })();
+      }
+   }, [id]);
+
    const handleAvatarChange = (event) => {
       const file = event.target.files[0];
       if (file) {
          const reader = new FileReader();
          reader.onloadend = () => {
-            setAvatar(reader.result); // Cập nhật ảnh mới
+            setAvatar(reader.result);
          };
          reader.readAsDataURL(file);
       }
+   };
+
+   const handleSave = async() => {
+      setLoading(true)
+      const updatedBot = {
+         name: botName,
+         avatar: avatar,
+         info: info,
+         language: language,
+         speed: speed,
+         created: new Date().toISOString(),
+      };
+      try {
+         let result = await editBot(id,updatedBot)
+         if(result && Object.keys(result).length>0){
+            toast.success("Sửa Bot thành công")
+         }
+      } catch (error) {
+         console.log(error)
+      }
+     
+      setLoading(false)
    };
 
    return (
@@ -36,78 +87,62 @@ const ChatBot = () => {
          <Row>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                <h4>Tổng quan</h4>
-               <Button variant="outline-primary">Lưu thay đổi</Button>
+               <Button variant="outline-primary" onClick={handleSave}>Lưu thay đổi</Button>
             </div>
 
             {/* Cột trái: Thông tin bot */}
             <Col md={7}>
                <Form.Group className="mb-3">
                   <h6>Tên <span style={{ color: "red" }}>*</span></h6>
-                  <Form.Control type="text" value="bot-demo" readOnly />
+                  <Form.Control type="text" value={botName} onChange={(e) => setBotName(e.target.value)} />
                </Form.Group>
 
                <Form.Group className="mb-3">
                   <h6>Giới thiệu <span style={{ color: "red" }}>*</span></h6>
-
-                  <Form.Control type="text" placeholder="Giới thiệu chung về cty, email, hotline,..." />
+                  <Form.Control type="text" value={info} onChange={(e) => setInfo(e.target.value)} placeholder="Giới thiệu chung về cty, email, hotline,..." />
                </Form.Group>
 
                {/* Avatar */}
                <div className="mb-3">
                   <h6>Avatar</h6>
-                  <input
-                     type="file"
-                     id="avatarInput"
-                     accept="image/*"
-                     style={{ display: "none" }}
-                     onChange={handleAvatarChange}
-                  />
-                  <img
-                     src={avatar}
-                     alt="Avatar"
-                     width={50}
-                     height={50}
-                     className="rounded-circle"
-                     style={{ cursor: "pointer", objectFit: "cover" }}
-                     onClick={() => document.getElementById("avatarInput").click()}
-                  />
+                  <input type="file" id="avatarInput" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+                  <img src={avatar} alt="Avatar" width={50} height={50} className="rounded-circle" style={{ cursor: "pointer", objectFit: "cover" }} onClick={() => document.getElementById("avatarInput").click()} />
                </div>
 
                <Form.Group className="mb-3">
                   <h6>Ngôn ngữ trả lời</h6>
-
                   <Dropdown>
-                     <Dropdown.Toggle style={{ border: "1px solid grey" }} variant="light" id="dropdown-basic">
-                        Tiếng Việt
+                     <Dropdown.Toggle style={{ border: "1px solid grey" }} variant="light">
+                        {language === "vi" ? "Tiếng Việt" : "English"}
                      </Dropdown.Toggle>
                      <Dropdown.Menu>
-                        <Dropdown.Item href="#/action-1">Tiếng Việt</Dropdown.Item>
-                        <Dropdown.Item href="#/action-2">English</Dropdown.Item>
+                        <Dropdown.Item onClick={() => setLanguage("vi")}>Tiếng Việt</Dropdown.Item>
+                        <Dropdown.Item onClick={() => setLanguage("en")}>English</Dropdown.Item>
                      </Dropdown.Menu>
                   </Dropdown>
                </Form.Group>
+
                <Form.Group className="mb-3">
                   <h6>Tốc độ bot trả lời</h6>
                   <Dropdown>
-                     <Dropdown.Toggle style={{ border: "1px solid grey" }} variant="light" id="dropdown-basic">
-                        Chậm (mặc định)
+                     <Dropdown.Toggle style={{ border: "1px solid grey" }} variant="light">
+                        {speed === 1 ? "Chậm (mặc định)" : "Nhanh"}
                      </Dropdown.Toggle>
                      <Dropdown.Menu>
-                        <Dropdown.Item href="#/action-1"> Chậm (mặc định)</Dropdown.Item>
-                        <Dropdown.Item href="#/action-2">Nhanh</Dropdown.Item>
+                        <Dropdown.Item onClick={() => setSpeed(1)}>Chậm (mặc định)</Dropdown.Item>
+                        <Dropdown.Item onClick={() => setSpeed(2)}>Nhanh</Dropdown.Item>
                      </Dropdown.Menu>
                   </Dropdown>
                </Form.Group>
+
                <Form.Group className="mb-3">
                   <h6>Hành động khi gặp câu hỏi không xác định </h6>
-
-                  <Form.Control type="text" placeholder="Nhập câu trả lời" />
+                  <Form.Control type="text"  placeholder="Nhập câu trả lời" />
                </Form.Group>
+
                <Button variant="outline-danger" className="mb-3">
                   <i className="fas fa-trash-alt"></i> Xóa
                </Button>
-
-
             </Col>
 
             {/* Cột phải: Cửa sổ chat */}
@@ -121,8 +156,12 @@ const ChatBot = () => {
 
 
 
+
 import { useRef } from 'react'; // Thêm useRef để tham chiếu input
 import { FiSend, FiTag } from 'react-icons/fi'
+import { useParams } from 'react-router-dom'
+import { editBot, getBot } from '../../services/bot'
+import { toast } from 'react-toastify'
 
 
 function ChatUI() {
