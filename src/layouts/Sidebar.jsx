@@ -48,7 +48,7 @@ const Sidebar = () => {
               aria-label="Sneat logo image"
             />
           </span>
-          <span className="app-brand-text demo menu-text fw-bold ms-2">
+          <span style={{ fontSize: "25px", fontWeight: "bold" }}>
             Chat Bot AI
           </span>
         </Link>
