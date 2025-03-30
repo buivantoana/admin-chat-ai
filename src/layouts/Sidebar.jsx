@@ -49,7 +49,7 @@ const Sidebar = () => {
             />
           </span>
           <span className="app-brand-text demo menu-text fw-bold ms-2">
-            Sneat
+            Chat Bot AI
           </span>
         </Link>
 
@@ -91,9 +91,8 @@ const MenuItem = ({ item, bots }) => {
 
   return (
     <li
-      className={`menu-item ${isActive || isSubmenuActive ? "active" : ""} ${
-        hasSubmenu && isSubmenuActive ? "open" : ""
-      }`}
+      className={`menu-item ${isActive || isSubmenuActive ? "active" : ""} ${hasSubmenu && isSubmenuActive ? "open" : ""
+        }`}
     >
       <NavLink
         aria-label={`Navigate to ${item.text} ${!item.available ? "Pro" : ""}`}
