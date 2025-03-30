@@ -163,14 +163,14 @@ function DataTrainingViewRight({ products, setProducts }) {
       </div>
 
       {/* Bảng FAQ với dữ liệu đã phân trang */}
-      <Table bordered hover>
+      <Table bordered hover style={{ fontSize: "13px" }}>
         <thead>
           <tr>
-            <th>Tên</th>
-            <th>Danh mục</th>
-            <th>Giới tính</th>
-            <th>Giá</th>
-            <th>Hoạt động</th>
+            <th style={{ fontSize: "13px", textTransform: "capitalize", width: "30%" }}>Tên</th>
+            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Danh mục</th>
+            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Giới tính</th>
+            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Giá</th>
+            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Hoạt động</th>
           </tr>
         </thead>
         <tbody>

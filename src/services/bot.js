@@ -1,10 +1,10 @@
-import axios from "axios";
+import api from "../core/axios";
 import { url_api } from "../config";
 
 export async function createBot(body) {
   try {
     let token = localStorage.getItem("token");
-    const response = await axios.post(`${url_api}/bots/create`, body, {
+    const response = await api.post(`${url_api}/bots/create`, body, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -30,7 +30,7 @@ export async function createBot(body) {
 export async function getBot(id) {
   try {
     let token = localStorage.getItem("token");
-    const response = await axios.get(`${url_api}/bots/${id}`, {
+    const response = await api.get(`${url_api}/bots/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -57,7 +57,7 @@ export async function getBot(id) {
 export async function editBot(idBot, body) {
   try {
     let token = localStorage.getItem("token");
-    const response = await axios.put(`${url_api}/bots/${idBot}`, body, {
+    const response = await api.put(`${url_api}/bots/${idBot}`, body, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -84,7 +84,7 @@ export async function editBot(idBot, body) {
 export async function getBotProduct(id) {
   try {
     let token = localStorage.getItem("token");
-    const response = await axios.get(`${url_api}/bots/${id}/products`, {
+    const response = await api.get(`${url_api}/bots/${id}/products`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -111,7 +111,7 @@ export async function getBotProduct(id) {
 export async function getBotBranch(id) {
   try {
     let token = localStorage.getItem("token");
-    const response = await axios.get(`${url_api}/bots/${id}/addresses`, {
+    const response = await api.get(`${url_api}/bots/${id}/addresses`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

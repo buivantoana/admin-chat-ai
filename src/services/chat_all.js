@@ -1,10 +1,10 @@
-import axios from "axios";
+import api from "../core/axios";
 import { url_api } from "../config";
 
 export async function botGetAllChat(id) {
    try {
       let token = localStorage.getItem("token")
-      const response = await axios.get(
+      const response = await api.get(
          `${url_api}/bots/${id}/chats`,
          {
             headers: {
@@ -31,10 +31,10 @@ export async function botGetAllChat(id) {
    }
 }
 
-export async function botChatActive(idBot,body,idChat) {
+export async function botChatActive(idBot, body, idChat) {
    try {
       let token = localStorage.getItem("token")
-      const response = await axios.put(
+      const response = await api.put(
          `${url_api}/bots/${idBot}/chats/${idChat}`,
          body,
          {

@@ -78,21 +78,21 @@ const BranchView = ({ products }) => {
                   variant="primary"
                   style={{ fontSize: "13px", padding: "5px 7px" }}
                 >
-                  Thêm nhân viên
+                  Thêm chi nhánh/cửa hàng
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Bảng FAQ với dữ liệu đã phân trang */}
-          <Table bordered hover>
+          <Table bordered hover style={{ fontSize: "13px" }}>
             <thead>
               <tr>
-                <th>Tên</th>
-                <th>SĐT</th>
-                <th>Mô tả</th>
-                <th>Địa chỉ</th>
-                <th>Hoạt động</th>
+                <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Tên</th>
+                <th style={{ fontSize: "13px", textTransform: "capitalize" }}>SĐT</th>
+                <th style={{ fontSize: "13px", textTransform: "capitalize", width: "30%" }}>Mô tả</th>
+                <th style={{ fontSize: "13px", textTransform: "capitalize", width: "30%" }}>Địa chỉ</th>
+                <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Hoạt động</th>
               </tr>
             </thead>
             <tbody>

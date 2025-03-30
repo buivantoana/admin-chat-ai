@@ -1,7 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import getGreetingMessage from '../utils/greetingHandler';
+import { jwtDecode } from 'jwt-decode';
 const Navbar = () => {
   const navigate = useNavigate()
+  let token = localStorage.getItem("token")
+  let name = ""
+  let email = ""
+  if (token) {
+    let decode = jwtDecode(token)
+    if (decode && Object.keys(token).length > 0) {
+      email = decode.email,
+        name = decode.role
+    }
+  }
   return (
     <nav
       className="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
@@ -13,7 +24,7 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        {getGreetingMessage('Dwi')}
+        {getGreetingMessage(name)}
         <ul className="navbar-nav flex-row align-items-center ms-auto">
           <li className="nav-item navbar-dropdown dropdown-user dropdown">
             <a aria-label='dropdown profile avatar' className="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
@@ -31,13 +42,14 @@ const Navbar = () => {
                       </div>
                     </div>
                     <div className="flex-grow-1">
-                      <span className="fw-medium d-block">John Doe</span>
-                      <small className="text-muted">Admin</small>
+                      <span className="fw-medium d-block" style={{ textTransform: "capitalize" }}>{name}</span>
+                      <small className="text-muted">{email}</small>
+
                     </div>
                   </div>
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <div className="dropdown-divider"></div>
               </li>
               <li>
@@ -60,7 +72,7 @@ const Navbar = () => {
                     <span className="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
                   </span>
                 </a>
-              </li>
+              </li> */}
               <li>
                 <div className="dropdown-divider"></div>
               </li>

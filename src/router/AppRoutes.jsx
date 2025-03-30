@@ -40,7 +40,7 @@ const AppRoutes = () => {
           />
           <Route path="chatbot-training" element={<ChatBotController />} />
           <Route path="overview/:id" element={<OverViewController />} />
-          <Route path="training-data" element={<DataTrainingController />} />
+          <Route path="training-data/:id" element={<DataTrainingController />} />
           <Route path="product/:id" element={<ProductController />} />
           <Route path="branch/:id" element={<BranchController />} />
           <Route path="chat" element={<ChatController />} />

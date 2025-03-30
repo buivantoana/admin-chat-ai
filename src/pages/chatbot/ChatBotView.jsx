@@ -164,7 +164,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                         src={
                           item.language == "vi"
                             ? "https://flagcdn.com/w320/vn.png"
-                            : ""
+                            : "https://flagcdn.com/w320/us.png"
                         }
                         width={30}
                         height={20}
@@ -342,9 +342,8 @@ const CreateChatbotModal = ({ show, setShow, setLoading }) => {
                     key={index}
                     src={avatar}
                     alt="Avatar"
-                    className={`rounded-circle me-2 ${
-                      selectedAvatar === avatar ? "border border-primary" : ""
-                    }`}
+                    className={`rounded-circle me-2 ${selectedAvatar === avatar ? "border border-primary" : ""
+                      }`}
                     width={50}
                     height={50}
                     style={{ cursor: "pointer", objectFit: "cover" }}

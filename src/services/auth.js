@@ -1,9 +1,9 @@
-import axios from "axios";
+import api from "../core/axios";
 import { url_api } from "../config";
 
 export async function Login({ email, password }) {
    try {
-      const response = await axios.post(
+      const response = await api.post(
          `${url_api}/users/login`,
          { email, password }
       );
@@ -27,7 +27,7 @@ export async function Login({ email, password }) {
 export async function Register(body) {
    try {
       let token = localStorage.getItem("token")
-      const response = await axios.post(
+      const response = await api.post(
          `${url_api}/users/register`,
          body,
          {
