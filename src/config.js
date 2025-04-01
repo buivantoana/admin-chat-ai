@@ -1,1 +1,1 @@
-export const url_api = "https://vp.zeezoo.mobi:8188";
+export const url_api = "https://aichat.zeezoo.mobi";
