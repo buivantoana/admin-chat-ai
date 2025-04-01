@@ -14,7 +14,7 @@ export const MessageManagementController = () => {
       console.log("tona");
       if (!localStorage.getItem("token")) return;
 
-      const socket = new WebSocket(`wss://vp.zeezoo.mobi:8188/ws/chats?token=${localStorage.getItem("token")}`);
+      const socket = new WebSocket(`wss://aichat.zeezoo.mobi:8188/ws/chats?token=${localStorage.getItem("token")}`);
 
       socket.onopen = () => console.log("✅ WebSocket connected");
 
