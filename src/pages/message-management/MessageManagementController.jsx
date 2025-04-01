@@ -65,7 +65,7 @@ export const MessageManagementController = () => {
       socket.onclose = () => {
          console.log("❌ WebSocket disconnected, sẽ thử kết nối lại...");
          setTimeout(() => {
-            setWs(new WebSocket(`wss://vp.zeezoo.mobi:8188/ws/chats?token=${localStorage.getItem("token")}`));
+            setWs(new WebSocket(`wss://aichat.zeezoo.mobi:8188/ws/chats?token=${localStorage.getItem("token")}`));
          }, 3000); // Tự động reconnect sau 3 giây
       };
 
