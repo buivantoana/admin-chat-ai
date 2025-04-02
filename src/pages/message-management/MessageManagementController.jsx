@@ -34,6 +34,13 @@ export const MessageManagementController = () => {
                   }
                   return item
                }));
+              if(localStorage.getItem("notify_chat")){
+                
+                 localStorage.setItem("notify_chat",JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")),msg.data.cid]))
+              }else{
+               console.log("no")
+               localStorage.setItem("notify_chat",JSON.stringify([msg.data.cid]))
+              }
                setChatBot((prevBotChat) =>
                   prevBotChat.map((item) => {
                      if (item.cid === msg.data.cid) {
@@ -46,6 +53,7 @@ export const MessageManagementController = () => {
                                  role: msg.data.role || "",
                                  content: msg.data.content || "",
                                  content_raw: null,
+                                 isRead:false
                               },
                            ],
                         };
@@ -81,7 +89,17 @@ export const MessageManagementController = () => {
                let result = await botGetAllChat(id)
                console.log(result);
                if (result) {
-                  setChatBot(result)
+                  setChatBot(result.map((item)=>{
+                     return {
+                        ...item,
+                        messages:item.messages.map((ix)=>{
+                           return {
+                              ...ix,
+                              isRead:true
+                           }
+                        })
+                     }
+                  }))
                }
             } catch (error) {
                console.log(error);

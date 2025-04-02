@@ -5,8 +5,9 @@ import inbox from "../../images/ic_dashboard_inbox.webp";
 import facebook from "../../images/ic_dashboard_messenger.webp";
 import zalo from "../../images/ic_dashboard_zalo.webp";
 import website from "../../images/ic_website.webp";
-const MessageManagementView = ({ botChat ,setChatBot}) => {
+const MessageManagementView = ({ botChat, setChatBot }) => {
    const [chat, setChat] = useState(null)
+   const initialLoad = useRef(true);
    useEffect(() => {
       if (!chat) return;
 
@@ -15,8 +16,8 @@ const MessageManagementView = ({ botChat ,setChatBot}) => {
    }, [botChat]);
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-         <ChatSidebar botChat={botChat} setChat={setChat} chat={chat} />
-         <ChatUI chat={chat}  setChatBot={setChatBot} />
+         <ChatSidebar botChat={botChat} initialLoad={initialLoad} setChat={setChat} chat={chat} />
+         <ChatUI chat={chat} initialLoad={initialLoad} botChat={botChat} setChatBot={setChatBot} />
       </div>
    )
 }
@@ -25,7 +26,7 @@ export default MessageManagementView
 
 
 
-const ChatSidebar = ({ botChat, setChat, chat }) => {
+const ChatSidebar = ({ botChat, setChat, chat ,initialLoad}) => {
    const [show, setShow] = useState(false);
    const [chatChanel, setChatChanel] = useState('inbox');
    const handleShow = () => setShow(true);
@@ -38,15 +39,15 @@ const ChatSidebar = ({ botChat, setChat, chat }) => {
             <Dropdown>
                <Dropdown.Toggle variant="link" className="text-dark p-0">
                   {chatChanel == "inbox" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={inbox} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Tất cả kênh chat</div>}
-                  {chatChanel == "facebook" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div>}
+                  {chatChanel == "messenger" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div>}
                   {chatChanel == "zalo" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={zalo} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Zalo</div>}
-                  {chatChanel == "website" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div>}
+                  {chatChanel == "web" && <div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div>}
                </Dropdown.Toggle>
                <Dropdown.Menu>
                   <Dropdown.Item onClick={() => setChatChanel("inbox")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={inbox} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Tất cả kênh chat</div></Dropdown.Item>
-                  <Dropdown.Item onClick={() => setChatChanel("facebook")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div></Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("messenger")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={facebook} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Messages</div></Dropdown.Item>
                   <Dropdown.Item onClick={() => setChatChanel("zalo")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={zalo} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Zalo</div></Dropdown.Item>
-                  <Dropdown.Item onClick={() => setChatChanel("website")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div></Dropdown.Item>
+                  <Dropdown.Item onClick={() => setChatChanel("web")}><div style={{ display: "flex", alignItems: "center", gap: "10px" }}> <img src={website} width={20} style={{ marginTop: "-3px" }} height={20} alt='' /> Website</div></Dropdown.Item>
                </Dropdown.Menu>
             </Dropdown>
          </div>
@@ -79,7 +80,19 @@ const ChatSidebar = ({ botChat, setChat, chat }) => {
          {/* Chat Item */}
          <div className='card-hover3' style={{ height: "45vh", overflowY: "scroll" }}>
             {botChat && botChat.length > 0 && botChat.map((item) => {
-               return <Card onClick={() => setChat(item)} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+               let notify = false
+               console.log(localStorage.getItem("notify_chat"))
+               if(localStorage.getItem("notify_chat")){
+                  if(JSON.parse(localStorage.getItem("notify_chat")).filter((ix)=>ix == item.cid)[0]){
+                     notify = true
+                  }
+               }
+               if(chatChanel == "inbox"){
+               return <Card onClick={() => {
+                  initialLoad.current = true
+                  setChat(item)}} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+                      {notify &&
+                           <div style={{color:"white",borderRadius:"50%" ,width:"13px",height:"13px",background:"red",position:"absolute",top:"-3px",right:"-1px",zIndex:"100"}}></div>}
                   <div className="d-flex align-items-center">
                      <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
                         style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
@@ -88,9 +101,9 @@ const ChatSidebar = ({ botChat, setChat, chat }) => {
                      <div className="ms-2">
                         <div style={{ display: "flex", justifyContent: "space-between", }}>
                            <div className="fw-bold">Bot</div>
-
+                          
                         </div>
-                        <small className="text-muted">Mình không thể trả lời cho...</small>
+                        <small className="text-muted" style={{textTransform:"capitalize"}}>{item.platform}</small>
                      </div>
                   </div>
                   <div className="mt-1 d-flex align-items-center">
@@ -99,7 +112,7 @@ const ChatSidebar = ({ botChat, setChat, chat }) => {
                   </div>
                   <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
                      <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
-                        <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
+                        <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} /> 
                      </Dropdown.Toggle>
                      <Dropdown.Menu>
                         <Dropdown.Item>Bỏ xem</Dropdown.Item>
@@ -107,6 +120,41 @@ const ChatSidebar = ({ botChat, setChat, chat }) => {
                      </Dropdown.Menu>
                   </Dropdown>
                </Card>
+               }
+               if(chatChanel==item.platform){
+                  return <Card onClick={() => {
+                     initialLoad.current = true
+                     setChat(item)}} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+                         {notify &&
+                              <div style={{color:"white",borderRadius:"50%" ,width:"13px",height:"13px",background:"red",position:"absolute",top:"-3px",right:"-1px",zIndex:"100"}}></div>}
+                     <div className="d-flex align-items-center">
+                        <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                           style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
+                           B
+                        </div>
+                        <div className="ms-2">
+                           <div style={{ display: "flex", justifyContent: "space-between", }}>
+                              <div className="fw-bold">Bot</div>
+                             
+                           </div>
+                           <small className="text-muted" style={{textTransform:"capitalize"}}>{item.platform}</small>
+                        </div>
+                     </div>
+                     <div className="mt-1 d-flex align-items-center">
+                        <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+   
+                     </div>
+                     <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
+                        <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
+                           <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} /> 
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                           <Dropdown.Item>Bỏ xem</Dropdown.Item>
+                           <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
+                        </Dropdown.Menu>
+                     </Dropdown>
+                  </Card>
+               }
             })}
 
          </div>
@@ -177,26 +225,90 @@ import { Row, Col } from 'react-bootstrap';
 import { useRef } from 'react'; // Thêm useRef để tham chiếu input
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import nochat from "../../images/img_no_message.webp"
-function ChatUI({ chat,setChatBot }) {
+function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    const [messages, setMessages] = useState(chat && chat.messages ? chat.messages : []);
    const [newMessage, setNewMessage] = useState('');
    const [show, setShow] = useState(false);
-   const fileInputRef = useRef(null); // Tham chiếu đến input file
+   const [unreadCount, setUnreadCount] = useState(0);
+   const fileInputRef = useRef(null);
+   const chatRef = useRef(null);
+   const lastScrollTop = useRef(0);
+   const [loading, setLoading] = useState(false);
 
+   // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
-      if (chat) {
-         setMessages(chat.messages)
+      if (chat && chat.messages) {
+         const updatedMessages = chat.messages.map(msg => ({
+            ...msg,
+            isRead: msg.isRead || false
+         }));
+         setMessages(updatedMessages);
+         const unread = updatedMessages.filter(msg => !msg.isRead).length;
+         setUnreadCount(unread);
+
+         if (initialLoad.current && chatRef.current) {
+            setLoading(true);  // Bắt đầu loading khi đang cuộn
+            setTimeout(() => {
+               chatRef.current.scrollTop = chatRef.current.scrollHeight;
+               setLoading(false);  // Tắt loading sau khi cuộn xong
+               initialLoad.current = false;
+            }, 300);  // Thời gian chờ để đảm bảo render xong
+         }
       }
-   }, [chat])
+   }, [chat]);
 
+   // Xử lý cuộn và đánh dấu đã đọc
+   useEffect(() => {
+      const chatElement = chatRef.current;
+      if (!chatElement) return;
 
+      const handleScroll = () => {
+         const { scrollTop, scrollHeight, clientHeight } = chatElement;
+         lastScrollTop.current = scrollTop;
 
+         // Kiểm tra nếu cuộn đến cuối
+         if (scrollTop + clientHeight >= scrollHeight - 5) {
+            const updatedMessages = messages.map(msg => ({
+               ...msg,
+               isRead: true
+            }));
+            setChatBot(botChat.map((item) => {
+               if (item.cid === chat.cid) {
+                  return {
+                     ...item,
+                     messages: updatedMessages
+                  };
+               }
+               return item;
+            }));
+            if(localStorage.getItem("notify_chat")){
+               localStorage.setItem("notify_chat",JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
+            }
+            setUnreadCount(0);
+         }
+      };
 
+      chatElement.addEventListener('scroll', handleScroll);
+      return () => chatElement.removeEventListener('scroll', handleScroll);
+   }, [messages]);
 
    const handleSendMessage = (e) => {
       e.preventDefault();
       if (newMessage.trim()) {
-         setMessages([...messages, { content: newMessage, time: '17:31', role: 'assistant' }]);
+         const newMsg = {
+            content: newMessage,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            role: 'assistant',
+            isRead: false
+         };
+         const updatedMessages = [...messages, newMsg];
+         setMessages(updatedMessages);
+
+         // Cập nhật số tin nhắn chưa đọc nếu không ở cuối
+         if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
+            setUnreadCount(prev => prev + 1);
+         }
+
          setNewMessage('');
       }
    };
@@ -204,15 +316,15 @@ function ChatUI({ chat,setChatBot }) {
    const handleShow = () => setShow(true);
    const handleClose = () => setShow(false);
 
-   // Hàm xử lý khi chọn file
    const handleFileUpload = (e) => {
       const file = e.target.files[0];
       if (file) {
-         const fileUrl = URL.createObjectURL(file); // Tạo URL tạm thời cho file
-         const fileType = file.type.split('/')[0]; // Lấy loại file (image hoặc video)
+         const fileUrl = URL.createObjectURL(file);
+         const fileType = file.type.split('/')[0];
          const newMsg = {
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), // Lấy giờ hiện tại
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             sender: 'me',
+            isRead: false
          };
 
          if (fileType === 'image') {
@@ -221,15 +333,19 @@ function ChatUI({ chat,setChatBot }) {
             newMsg.video = fileUrl;
          }
 
-         setMessages([...messages, newMsg]);
+         const updatedMessages = [...messages, newMsg];
+         setMessages(updatedMessages);
+
+         if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
+            setUnreadCount(prev => prev + 1);
+         }
       }
    };
 
-   // Hàm kích hoạt input file khi nhấn icon
    const triggerFileInput = () => {
       fileInputRef.current.click();
    };
-   console.log(messages);
+
    return (
       <>
          {!chat && <div style={{ width: "68%" }} >
@@ -240,17 +356,21 @@ function ChatUI({ chat,setChatBot }) {
                         <img src={nochat} alt="" />
                         <h5 style={{ fontWeight: "bold" }}>Cuộc hội thoại sẽ xuất hiện ở đây</h5>
                      </div>
-
                   </Card>
                </Col>
             </Row>
-
-
          </div>}
+
          {chat && <div style={{ width: "68%" }} >
             <Row>
                <Col md={12} >
-                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh" }}>
+
+                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh",position:"relative" }}>
+                  {loading && (
+                           <div className="d-flex justify-content-center align-items-center" style={{ position: 'absolute', width:"100%",height:"100%",background:"white",zIndex:1,borderRadius:"10px" }}>
+                              <Spinner animation="border" variant="primary" />
+                           </div>
+                        )}
                      <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
                         <div style={{ display: "flex", gap: "10px" }}>
                            <div>
@@ -265,14 +385,47 @@ function ChatUI({ chat,setChatBot }) {
                               <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
                            </div>
                         </div>
-                        <AutoReplyToggle chat={chat} setChatBot={setChatBot} />
-                        <FiAlertCircle
-                           style={{ cursor: "pointer" }}
-                           size={23}
-                           onClick={handleShow}
-                        />
+                        <div className="d-flex align-items-center gap-2">
+                           {unreadCount > 0 && (
+                              <Badge bg="danger">{unreadCount} chưa đọc</Badge>
+                           )}
+                           <AutoReplyToggle chat={chat} setChatBot={setChatBot} />
+                           <FiAlertCircle
+                              style={{ cursor: "pointer" }}
+                              size={23}
+                              onClick={handleShow}
+                           />
+                        </div>
                      </Card.Header>
-                     <ChatComponent messages={messages} />
+                     <Card.Body ref={chatRef} style={{ height: "55vh", overflowY: "auto", transition: "1s" }}>
+                        
+                        
+
+                        {messages.map((msg, index) => (
+                           <div
+                              key={index}
+                              className={`d-flex mb-2 mt-1 ${msg.role === "assistant" ? "justify-content-end" : "justify-content-start"}`}
+                           >
+                              <div
+                                 className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"}`}
+                                 style={{ 
+                                    maxWidth: "70%",
+                                    opacity: msg.isRead ? 1 : 0.7 // Tin nhắn chưa đọc sẽ mờ hơn
+                                 }}
+                              >
+                                 {msg.content && msg.role !== "system" && <p className="mb-0">{msg.content}</p>}
+                                 {msg.image && <img src={msg.image} alt="attachment" className="img-fluid rounded" />}
+                                 {msg.video && (
+                                    <video controls className="img-fluid rounded">
+                                       <source src={msg.video} type="video/mp4" />
+                                       Your browser does not support the video tag.
+                                    </video>
+                                 )}
+                                 <small>{msg.time}</small>
+                              </div>
+                           </div>
+                        ))}
+                     </Card.Body>
                      <Card.Footer style={{ background: "white" }}>
                         <Form onSubmit={handleSendMessage}>
                            <InputGroup>
@@ -282,16 +435,14 @@ function ChatUI({ chat,setChatBot }) {
                                  value={newMessage}
                                  onChange={(e) => setNewMessage(e.target.value)}
                               />
-                              {/* Nút với icon FiLink để tải file */}
                               <Button variant="outline-secondary" onClick={triggerFileInput}>
                                  <FiLink />
                               </Button>
-                              {/* Input file ẩn */}
                               <input
                                  type="file"
                                  ref={fileInputRef}
                                  style={{ display: 'none' }}
-                                 accept="image/*,video/*" // Chỉ chấp nhận image và video
+                                 accept="image/*,video/*"
                                  onChange={handleFileUpload}
                               />
                               <Button variant="primary" type="submit">
@@ -349,35 +500,35 @@ import { toast } from 'react-toastify';
 import { botChatActive } from '../../services/chat_all';
 
 
-const AutoReplyToggle = ({chat ,setChatBot}) => {
-   console.log("Auto complate",chat)
+const AutoReplyToggle = ({ chat, setChatBot }) => {
+   console.log("Auto complate", chat)
    const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
    const [loading, setLoading] = useState(false);
-    const { id } = useParams();
-   useEffect(()=>{
-      if(chat){
+   const { id } = useParams();
+   useEffect(() => {
+      if (chat) {
          setIsAutoReplyOn(chat.active)
       }
-   },[chat])
+   }, [chat])
 
-   const toggleAutoReply = async() => {
+   const toggleAutoReply = async () => {
       setLoading(true)
       try {
-         let result = await botChatActive(id,{active:!isAutoReplyOn},chat.cid)
-         if(result && (result.active == true ||result.active == false )){
+         let result = await botChatActive(id, { active: !isAutoReplyOn }, chat.cid)
+         if (result && (result.active == true || result.active == false)) {
             setIsAutoReplyOn(result.active)
-            setChatBot((prev)=>prev.map((item)=>{
-               if(item.cid == chat.cid){
+            setChatBot((prev) => prev.map((item) => {
+               if (item.cid == chat.cid) {
                   return {
                      ...item,
-                     active:result.active
+                     active: result.active
                   }
                }
                return item
             }))
-            toast.success(`Auto reply ${!isAutoReplyOn==true? "ON":"OFF"} Thành công` )
-         }else{
-            toast.warning(`Auto reply ${!isAutoReplyOn==true? "ON":"OFF"} Thất bại` )
+            toast.success(`Auto reply ${!isAutoReplyOn == true ? "ON" : "OFF"} Thành công`)
+         } else {
+            toast.warning(`Auto reply ${!isAutoReplyOn == true ? "ON" : "OFF"} Thất bại`)
          }
 
       } catch (error) {
@@ -391,14 +542,14 @@ const AutoReplyToggle = ({chat ,setChatBot}) => {
          <Popover.Body>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
                <strong>Auto-reply</strong>
-               {loading? <Spinner size='20' color='blue' />:
-               <Form.Check
-                  type="switch"
-                  id="auto-reply-switch"
-                  label=""
-                  checked={isAutoReplyOn}
-                  onChange={toggleAutoReply}
-               />}
+               {loading ? <Spinner size='20' color='blue' /> :
+                  <Form.Check
+                     type="switch"
+                     id="auto-reply-switch"
+                     label=""
+                     checked={isAutoReplyOn}
+                     onChange={toggleAutoReply}
+                  />}
             </div>
             <p>Khi bật lên, bot sẽ tự trả lời tin nhắn của khách hàng</p>
 
@@ -440,16 +591,15 @@ const AutoReplyToggle = ({chat ,setChatBot}) => {
 
 
 
-const ChatComponent = ({ messages }) => {
+const ChatComponent = ({ messages, chat }) => {
    const chatRef = useRef(null);
 
-   // ✅ Khi vào màn hình hoặc có tin nhắn mới, luôn cuộn xuống dưới cùng
+
    useEffect(() => {
       if (chatRef.current) {
          chatRef.current.scrollTop = chatRef.current.scrollHeight;
       }
-   }, [messages]); // Chạy mỗi khi messages thay đổi
-
+   }, [messages]);
    return (
       <Card.Body ref={chatRef} style={{ height: "55vh", overflowY: "auto" }}>
          {messages.map((msg, index) => (
