@@ -109,7 +109,7 @@ export const MessageManagementController = () => {
       }
    }, [id])
    return <>
-      <MessageManagementView botChat={botChat} setChatBot={setChatBot} />
+      <MessageManagementView loading={loading} botChat={botChat} setChatBot={setChatBot} />
    </>
 
 }

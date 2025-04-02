@@ -5,7 +5,7 @@ import inbox from "../../images/ic_dashboard_inbox.webp";
 import facebook from "../../images/ic_dashboard_messenger.webp";
 import zalo from "../../images/ic_dashboard_zalo.webp";
 import website from "../../images/ic_website.webp";
-const MessageManagementView = ({ botChat, setChatBot }) => {
+const MessageManagementView = ({ botChat, setChatBot,loading }) => {
    const [chat, setChat] = useState(null)
    const initialLoad = useRef(true);
    useEffect(() => {
@@ -16,7 +16,7 @@ const MessageManagementView = ({ botChat, setChatBot }) => {
    }, [botChat]);
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-         <ChatSidebar botChat={botChat} initialLoad={initialLoad} setChat={setChat} chat={chat} />
+         <ChatSidebar botChat={botChat} initialLoad={initialLoad} setChat={setChat} loading={loading} chat={chat} />
          <ChatUI chat={chat} initialLoad={initialLoad} botChat={botChat} setChatBot={setChatBot} />
       </div>
    )
@@ -26,7 +26,7 @@ export default MessageManagementView
 
 
 
-const ChatSidebar = ({ botChat, setChat, chat ,initialLoad}) => {
+const ChatSidebar = ({ botChat, setChat, chat ,initialLoad ,loading}) => {
    const [show, setShow] = useState(false);
    const [chatChanel, setChatChanel] = useState('inbox');
    const handleShow = () => setShow(true);
@@ -79,7 +79,8 @@ const ChatSidebar = ({ botChat, setChat, chat ,initialLoad}) => {
 
          {/* Chat Item */}
          <div className='card-hover3' style={{ height: "45vh", overflowY: "scroll" }}>
-            {botChat && botChat.length > 0 && botChat.map((item) => {
+            {loading ? <div style={{width:"100%", display:"flex",justifyContent:"center"}}><Spinner size='15'/></div> :
+            <> {botChat && botChat.length > 0 && botChat.map((item) => {
                let notify = false
                console.log(localStorage.getItem("notify_chat"))
                if(localStorage.getItem("notify_chat")){
@@ -156,7 +157,9 @@ const ChatSidebar = ({ botChat, setChat, chat ,initialLoad}) => {
                   </Card>
                }
             })}
-
+</>
+            }
+           
          </div>
 
          <Modal show={show} onHide={handleClose} centered size="lg">
