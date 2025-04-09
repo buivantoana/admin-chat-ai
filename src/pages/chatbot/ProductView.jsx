@@ -328,13 +328,15 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
       
       if(result && result.message){
         toast.success(result.message)
-        getProduct()
+        await getProduct()
       }
     } catch (error) {
       console.log(error)
+    }finally{
+      handleClose();
+      setLoading(false)
+
     }
-    handleClose();
-    setLoading(false)
   };
 
   return (
