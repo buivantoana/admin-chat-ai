@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Sidebar from "./SideBar";
 
-const ProductView = ({ products, setProducts }) => {
+const ProductView = ({ products, setProducts,setLoading,getProduct }) => {
   return (
     <div style={{ display: "flex" }}>
       <Sidebar />
@@ -16,7 +16,7 @@ const ProductView = ({ products, setProducts }) => {
           overflowY: "scroll",
         }}
       >
-        <DataTrainingViewRight products={products} setProducts={setProducts} />
+        <DataTrainingViewRight products={products} getProduct={getProduct} setLoading={setLoading} setProducts={setProducts} />
       </div>
     </div>
   );
@@ -41,136 +41,121 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-function DataTrainingViewRight({ products, setProducts }) {
+function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }) {
   const [importFaq, setImportFaq] = useState(false);
   const [createFaq, setCreateFaq] = useState(false);
-
-  // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5); // Mặc định 10 item mỗi trang
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const { id } = useParams();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [productToUpdate, setProductToUpdate] = useState(null);
 
-  // Hàm xóa FAQ
+  const handleConfirmDelete = (productId) => {
+    setProductToDelete(productId);
+    setShowDeleteModal(true);
+  };
 
-  // Hàm chỉnh sửa FAQ
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    console.log(productToDelete)
+    try {
+      setLoading(true);
+      const response = await deleteProduct(id,productToDelete)
+
+     if(response && response.message){
+      toast.success(response.message)
+     }
+      await getProduct();
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi khi xóa sản phẩm");
+    } finally {
+      setLoading(false);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    }
+  };
+
   const handleEditFAQ = (id) => {
     alert(`Chỉnh sửa FAQ với ID: ${id}`);
   };
 
-  // Tính toán phân trang
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = products.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
-  // Hàm thay đổi trang
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Hàm thay đổi số lượng item mỗi trang
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(parseInt(e.target.value));
-    setCurrentPage(1); // Reset về trang 1 khi thay đổi số lượng item
+    setCurrentPage(1);
   };
 
   return (
     <Container className="mt-2">
-      {/* Phần header giữ nguyên */}
+      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h4>Gậy golf</h4>
+        <h4>Danh sách sản phẩm</h4>
         <Row className="mb-3">
           <Col className="text-end">
             <span style={{ paddingRight: "10px" }}>Sắp xếp theo</span>
             <Button
-              onClick={() => {
+              onClick={() =>
                 setProducts(
-                  products.sort(
-                    (a, b) => new Date(b.created) - new Date(a.created)
-                  )
-                );
-              }}
+                  [...products].sort((a, b) => new Date(b.created) - new Date(a.created))
+                )
+              }
               variant="outline-secondary"
               style={{ fontSize: "13px", padding: "5px 7px" }}
               className="me-2"
             >
-              Mới nhất{" "}
-              <FaSortAmountUp
-                style={{ marginTop: "-3px", marginLeft: "3px" }}
-              />
+              Mới nhất <FaSortAmountUp style={{ marginTop: "-3px", marginLeft: "3px" }} />
             </Button>
             <Button
-              onClick={() => {
+              onClick={() =>
                 setProducts(
-                  products.sort(
-                    (a, b) => new Date(a.created) - new Date(b.created)
-                  )
-                );
-              }}
+                  [...products].sort((a, b) => new Date(a.created) - new Date(b.created))
+                )
+              }
               variant="outline-secondary"
               style={{ fontSize: "13px", padding: "5px 7px" }}
             >
-              Cũ nhất{" "}
-              <FaSortAmountDownAlt
-                style={{ marginTop: "-3px", marginLeft: "3px" }}
-              />
+              Cũ nhất <FaSortAmountDownAlt style={{ marginTop: "-3px", marginLeft: "3px" }} />
             </Button>
           </Col>
         </Row>
       </div>
 
-      {/* Phần FAQ header giữ nguyên */}
+      {/* Thêm sản phẩm */}
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "end",
           alignItems: "center",
           marginBottom: "20px",
         }}
       >
-        <div>
-          <h6>FAQ ({products.length})</h6>
-        </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div>
-            <h6 style={{ margin: 0 }}>Tôi phải thêm câu hỏi bằng cách nào?</h6>
-          </div>
-          <div>
-            <Button
-              variant="primary"
-              onClick={() => setImportFaq(true)}
-              style={{ fontSize: "13px", padding: "5px 7px" }}
-              className="me-2"
-            >
-              Import FAQs
-            </Button>
-          </div>
-          <div>
-            <Button
-              variant="primary"
-              onClick={() => setCreateFaq(true)}
-              style={{ fontSize: "13px", padding: "5px 7px" }}
-            >
-              ADD FAQs
-            </Button>
-          </div>
-          <div>
-            <Button
-              variant="primary"
-              style={{ fontSize: "13px", padding: "5px 7px" }}
-            >
-              Huấn luyện
-            </Button>
-          </div>
-        </div>
+        <Button
+          variant="primary"
+          onClick={() => setCreateFaq(true)}
+          style={{ fontSize: "13px", padding: "5px 7px" }}
+        >
+          Thêm sản phẩm
+        </Button>
       </div>
 
-      {/* Bảng FAQ với dữ liệu đã phân trang */}
+      {/* Bảng sản phẩm */}
       <Table bordered hover style={{ fontSize: "13px" }}>
         <thead>
           <tr>
-            <th style={{ fontSize: "13px", textTransform: "capitalize", width: "30%" }}>Tên</th>
-            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Danh mục</th>
-            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Giới tính</th>
-            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Giá</th>
-            <th style={{ fontSize: "13px", textTransform: "capitalize" }}>Hoạt động</th>
+            <th style={{ width: "30%" }}>Tên</th>
+            <th>Danh mục</th>
+            <th>Giới tính</th>
+            <th>Giá</th>
+            <th>Hoạt động</th>
           </tr>
         </thead>
         <tbody>
@@ -178,21 +163,24 @@ function DataTrainingViewRight({ products, setProducts }) {
             <tr key={faq.uid}>
               <td>{faq.name}</td>
               <td>{faq.category}</td>
-              <td>
-                <td>{faq.gender}</td>
-              </td>
-              <td>
-                <td>{faq.price.toLocaleString("vi-VN") + " VND"}</td>
-              </td>
+              <td>{faq.gender}</td>
+              <td>{faq.price.toLocaleString("vi-VN")} VND</td>
               <td>
                 <Button
                   variant="link"
-                  onClick={() => handleEditFAQ(faq.id)}
+                  onClick={() => {
+                    setCreateFaq(true)
+                    setProductToUpdate(faq)
+                  }}
                   className="text-primary"
                 >
                   <FaEdit />
                 </Button>
-                <Button variant="link" className="text-danger">
+                <Button
+                  variant="link"
+                  className="text-danger"
+                  onClick={() => handleConfirmDelete(faq.id)}
+                >
                   <FaTrash />
                 </Button>
               </td>
@@ -201,7 +189,7 @@ function DataTrainingViewRight({ products, setProducts }) {
         </tbody>
       </Table>
 
-      {/* Phần phân trang */}
+      {/* Phân trang */}
       <div
         style={{
           display: "flex",
@@ -210,21 +198,17 @@ function DataTrainingViewRight({ products, setProducts }) {
           marginTop: "20px",
         }}
       >
-        <div>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            style={{ width: "auto", display: "inline-block" }}
-          >
-            <option value={5}>5 </option>
-            <option value={10}>10 </option>
-            <option value={20}>20 </option>
-            <option value={50}>50 </option>
-          </Form.Select>
-          {/* <span style={{ marginLeft: '10px' }}>
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, faqs.length)} of {faqs.length} entries
-               </span> */}
-        </div>
+        <Form.Select
+          value={itemsPerPage}
+          onChange={handleItemsPerPageChange}
+          style={{ width: "auto" }}
+        >
+          <option value={5}>5 </option>
+          <option value={10}>10 </option>
+          <option value={20}>20 </option>
+          <option value={50}>50 </option>
+        </Form.Select>
+
         <Pagination>
           <Pagination.Prev
             onClick={() => paginate(currentPage - 1)}
@@ -246,264 +230,205 @@ function DataTrainingViewRight({ products, setProducts }) {
         </Pagination>
       </div>
 
-      <ImportFAQModal show={importFaq} setShow={setImportFaq} />
-      <CreateFAQOffcanvas show={createFaq} setShow={setCreateFaq} />
+      {/* Offcanvas thêm sản phẩm */}
+      <CreateProductOffcanvas
+        getProduct={getProduct}
+        setLoading={setLoading}
+        show={createFaq}
+        setShow={setCreateFaq}
+        productToUpdate={productToUpdate}
+      />
+
+      {/* Modal xác nhận xóa */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận xóa</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Bạn có chắc chắn muốn xóa sản phẩm này không?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Xóa
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }
 
 import { Modal } from "react-bootstrap";
 
-const ImportFAQModal = ({ show, setShow }) => {
-  const [selectedFile, setSelectedFile] = useState(null); // Trạng thái lưu file đã chọn
 
-  // Hàm mở modal
-
-  // Hàm đóng modal
-  const handleClose = () => {
-    setShow(false);
-    setSelectedFile(null); // Reset file khi đóng modal
-  };
-
-  // Hàm xử lý khi người dùng chọn file
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Kiểm tra định dạng file (chỉ cho phép .xls, .xlsx)
-      const validFormats = [
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      ];
-      if (!validFormats.includes(file.type)) {
-        alert("Vui lòng chọn file có định dạng .xls hoặc .xlsx");
-        return;
-      }
-
-      // Kiểm tra kích thước file (giới hạn 100MB)
-      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-      if (file.size > maxSize) {
-        alert("File không được vượt quá 100MB");
-        return;
-      }
-
-      setSelectedFile(file);
-    }
-  };
-
-  // Hàm xử lý khi nhấn nút "Nhập dữ liệu"
-  const handleImport = () => {
-    if (!selectedFile) {
-      alert("Vui lòng chọn một file trước khi nhập dữ liệu");
-      return;
-    }
-
-    // Logic xử lý file (ví dụ: gửi file lên server)
-    console.log("File đã chọn:", selectedFile);
-    // Ở đây bạn có thể thêm logic để gửi file lên server, ví dụ sử dụng FormData và fetch/axios
-    /*
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-  
-      fetch('your-api-endpoint', {
-        method: 'POST',
-        body: formData,
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Kết quả từ server:', data);
-          handleClose(); // Đóng modal sau khi nhập dữ liệu thành công
-        })
-        .catch(error => {
-          console.error('Lỗi khi nhập dữ liệu:', error);
-        });
-      */
-
-    // Đóng modal sau khi xử lý (tạm thời)
-    handleClose();
-  };
-
-  return (
-    <>
-      {/* Modal */}
-      <Modal show={show} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Import FAQs</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div
-            className="text-center mb-3"
-            style={{
-              border: "1px dashed #ddd",
-              padding: "6px",
-              borderRadius: "5px",
-            }}
-          >
-            <i className="bi bi-cloud-upload" style={{ fontSize: "2rem" }}></i>
-            <p>Tải tài liệu từ máy tính, chon, hoặc kéo thả</p>
-            <p>Cho phép các định dạng file: .xls, .xlsx</p>
-            <p>
-              Các định dạng tệp được chấp nhận bao gồm .xls, .xlsx. Tệp chứa tối
-              đa 1000 dòng dữ liệu và không vượt quá 100MB
-            </p>
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Control
-                type="file"
-                accept=".xls,.xlsx"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-                id="fileInput"
-              />
-              <Button
-                variant="outline-primary"
-                onClick={() => document.getElementById("fileInput").click()}
-              >
-                Chọn tài liệu
-              </Button>
-            </Form.Group>
-          </div>
-          <p>
-            Vui lòng tải file mẫu: <a href="#">Tại đây</a>
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={handleClose}>
-            Thoát
-          </Button>
-          <Button variant="primary" onClick={handleImport}>
-            Nhập dữ liệu
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </>
-  );
-};
 
 import { Offcanvas } from "react-bootstrap";
+import { createProduct, deleteProduct, updateProduct } from "../../services/product";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // Đảm bảo bạn đã cài đặt và import Bootstrap CSS
 
-const CreateFAQOffcanvas = ({ show, setShow }) => {
+const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToUpdate }) => {
+   const { id } = useParams();
   const [formData, setFormData] = useState({
-    question: "",
-    answer: "",
-    status: "Hoạt động", // Giá trị mặc định cho dropdown
+    name: "",
+    gender: "male",
+    price: 0,
+    category: "",
+    link: "",
+    features: "",
+    description: "",
+    bot: ""
   });
-  // Hàm đóng Offcanvas
+  useEffect(()=>{
+    if(productToUpdate){
+      setFormData(productToUpdate)
+    }
+  },[productToUpdate])
   const handleClose = () => {
     setShow(false);
-    // Reset form khi đóng Offcanvas
     setFormData({
-      question: "",
-      answer: "",
-      status: "Hoạt động",
+      name: "",
+      gender: "male",
+      price: 0,
+      category: "",
+      link: "",
+      features: "",
+      description: "",
+      bot: ""
     });
   };
 
-  // Hàm xử lý thay đổi giá trị trong form
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Nếu là input number (price), ép kiểu số
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: name === "price" ? Number(value) : value,
     });
   };
 
-  // Hàm xử lý khi nhấn nút "Lưu câu hỏi"
-  const handleSave = () => {
-    if (!formData.question || !formData.answer) {
-      alert("Vui lòng điền đầy đủ câu hỏi và câu trả lời");
+  const handleSave = async() => {
+    setLoading(true)
+    if (!formData.name ) {
+      alert("Vui lòng điền đầy đủ tên sản phẩm và bot.");
       return;
     }
-
-    // Logic lưu câu hỏi (ví dụ: gửi dữ liệu lên server)
-    console.log("Dữ liệu FAQ:", formData);
-    // Ở đây bạn có thể thêm logic để gửi dữ liệu lên server, ví dụ sử dụng fetch/axios
-    /*
-      fetch('your-api-endpoint', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Kết quả từ server:', data);
-          handleClose(); // Đóng Offcanvas sau khi lưu thành công
-        })
-        .catch(error => {
-          console.error('Lỗi khi lưu câu hỏi:', error);
-        });
-      */
-
-    // Đóng Offcanvas sau khi xử lý (tạm thời)
+    try {
+      let result
+      if(updateProduct){
+        result = await updateProduct(id,formData.id,formData)
+      }else{
+        result = await createProduct(id,formData)
+      }
+      
+      if(result && result.message){
+        toast.success(result.message)
+        getProduct()
+      }
+    } catch (error) {
+      console.log(error)
+    }
     handleClose();
+    setLoading(false)
   };
 
   return (
     <>
       <Offcanvas show={show} onHide={handleClose} placement="end">
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Tạo FAQs</Offcanvas.Title>
+          <Offcanvas.Title>Tạo sản phẩm</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Form>
-            {/* Trạng thái */}
-            <Form.Group
-              controlId="formStatus"
-              className="mb-3 d-flex align-items-center"
-            >
-              <Form.Label className="me-3">Trạng thái</Form.Label>
-              <Form.Select
-                name="status"
-                value={formData.status}
+            <Form.Group className="mb-3">
+              <Form.Label>Tên sản phẩm</Form.Label>
+              <Form.Control
+                type="text"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                style={{ width: "auto" }}
-              >
-                <option value="Hoạt động">Hoạt động</option>
-                <option value="Thôi">Thôi</option>
+                placeholder="Nhập tên sản phẩm"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Giới tính</Form.Label>
+              <Form.Select name="gender" value={formData.gender} onChange={handleChange}>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+                <option value="">Không xác định</option>
               </Form.Select>
             </Form.Group>
 
-            {/* Dữ liệu huấn luyện */}
-            <Form.Group controlId="formQuestion" className="mb-3">
-              <Form.Label>Câu hỏi</Form.Label>
-              <div className="d-flex align-items-center">
-                <Form.Control
-                  type="text"
-                  name="question"
-                  value={formData.question}
-                  onChange={handleChange}
-                  placeholder="Nhập câu hỏi"
-                />
-              </div>
-            </Form.Group>
-
-            {/* Câu trả lời */}
-            <Form.Group controlId="formAnswer" className="mb-3">
-              <Form.Label>Trả lời</Form.Label>
+            <Form.Group className="mb-3">
+              <Form.Label>Giá</Form.Label>
               <Form.Control
-                as="textarea"
-                rows={3}
-                name="answer"
-                value={formData.answer}
+                type="number"
+                name="price"
+                value={formData.price}
                 onChange={handleChange}
-                placeholder="Nhập câu trả lời"
+                placeholder="Nhập giá"
               />
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Danh mục</Form.Label>
+              <Form.Control
+                type="text"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                placeholder="Nhập danh mục"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Link sản phẩm</Form.Label>
+              <Form.Control
+                type="text"
+                name="link"
+                value={formData.link}
+                onChange={handleChange}
+                placeholder="https://example.com"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Đặc điểm</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="features"
+                value={formData.features}
+                onChange={handleChange}
+                placeholder="Mô tả đặc điểm"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Mô tả chi tiết</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="description"
+                rows={3}
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Chi tiết sản phẩm..."
+              />
+            </Form.Group>
+
           </Form>
 
-          {/* Nút điều khiển */}
           <div className="d-flex justify-content-end mt-4">
-            <Button
-              variant="outline-secondary"
-              onClick={handleClose}
-              className="me-2"
-            >
+            <Button variant="outline-secondary" onClick={handleClose} className="me-2">
               Thoát
             </Button>
             <Button variant="primary" onClick={handleSave}>
-              Lưu câu hỏi
+              Lưu sản phẩm
             </Button>
           </div>
         </Offcanvas.Body>
@@ -511,3 +436,4 @@ const CreateFAQOffcanvas = ({ show, setShow }) => {
     </>
   );
 };
+

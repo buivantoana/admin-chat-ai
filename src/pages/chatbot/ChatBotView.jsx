@@ -13,14 +13,44 @@ const ChatBotView = ({ bots, setLoading }) => {
   const [view, setView] = useState("grid");
   const [show, setShow] = useState(false);
   const [createChatBot, setCreateChatBot] = useState(false);
+  const [deleteChatBot, setDeleteChatBot] = useState(false);
+  const context = useChatContext();
   const navigate = useNavigate();
   const handleNavigate = (id) => {
     navigate(`/overview/${id}`);
   };
 
-  const handleShow = () => setShow(true);
+  const handleShow = (data) => {
+    setDeleteChatBot(data)
+    setShow(true)};
   const handleClose = () => setShow(false);
-
+  const handleDeleteBot = async ()=>{
+    setLoading(true)
+    try {
+      if(deleteChatBot){
+        let result = await deleteBot(deleteChatBot.bid)
+        if(result && result.message){
+          toast.success(result.message)
+          handleClose()
+          setDeleteChatBot(null)
+          localStorage.setItem(
+            "bots",
+            JSON.stringify(JSON.parse(localStorage.getItem("bots")).filter((item)=>item.bid != deleteChatBot.bid))
+          );
+          context.dispatch({
+            type: "DELETE_BOT",
+            payload: {
+              ...context.state,
+              bots: JSON.parse(localStorage.getItem("bots")).filter((item)=>item.bid != deleteChatBot.bid),
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
+    setLoading(false)
+  }
   return (
     <Container
       className=""
@@ -114,7 +144,10 @@ const ChatBotView = ({ bots, setLoading }) => {
                         </Button>
                         <Button
                           variant="outline-danger"
-                          onClick={handleShow}
+                          onClick={()=>{
+                            handleShow(item)
+
+                          }}
                           size="sm"
                         >
                           <FiTrash2 />
@@ -179,7 +212,9 @@ const ChatBotView = ({ bots, setLoading }) => {
                       </Button>
                       <Button
                         variant="outline-danger"
-                        onClick={handleShow}
+                        onClick={()=>{
+                          handleShow(item)
+                        }}
                         size="sm"
                       >
                         <FiTrash2 />
@@ -210,7 +245,7 @@ const ChatBotView = ({ bots, setLoading }) => {
           <Button variant="secondary" onClick={handleClose}>
             Hủy
           </Button>
-          <Button variant="danger">Xóa</Button>
+          <Button onClick={handleDeleteBot} variant="danger">Xóa</Button>
         </Modal.Footer>
       </Modal>
       <CreateChatbotModal
@@ -226,7 +261,7 @@ export default ChatBotView;
 import { Form, InputGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { createBot } from "../../services/bot";
+import { createBot, deleteBot } from "../../services/bot";
 import { toast } from "react-toastify";
 import { useChatContext } from "../../App";
 

@@ -10,24 +10,25 @@ export const ProductController = () => {
   const { id } = useParams();
   useEffect(() => {
     if (id) {
-      (async () => {
-        setLoading(true);
-        try {
-          let result = await getBotProduct(id);
-          if (result && result.length > 0) {
-            setProducts(result);
-          }
-        } catch (error) {
-          console.log(error);
-        }
-        setLoading(false);
-      })();
+      getProduct()
     }
   }, [id]);
+  const getProduct = async ()=>{
+    setLoading(true);
+    try {
+      let result = await getBotProduct(id);
+      if (result && result.length > 0) {
+        setProducts(result);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setLoading(false);
+  }
   return (
     <div>
       {loading && <Loading />}
-      <ProductView products={products} setProducts={setProducts} />
+      <ProductView products={products} setLoading={setLoading} getProduct={getProduct} setProducts={setProducts} />
     </div>
   );
 };

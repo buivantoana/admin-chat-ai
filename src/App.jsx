@@ -16,6 +16,11 @@ const reducer = (state, action) => {
         ...state,
         bots: action.payload.bots,
       };
+    case "DELETE_BOT":
+        return {
+          ...state,
+          bots: action.payload.bots,
+        };
     case "LIST_BOT":
       return {
         ...state,
