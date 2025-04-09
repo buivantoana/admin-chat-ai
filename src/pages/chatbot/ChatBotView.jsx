@@ -22,26 +22,27 @@ const ChatBotView = ({ bots, setLoading }) => {
 
   const handleShow = (data) => {
     setDeleteChatBot(data)
-    setShow(true)};
+    setShow(true)
+  };
   const handleClose = () => setShow(false);
-  const handleDeleteBot = async ()=>{
+  const handleDeleteBot = async () => {
     setLoading(true)
     try {
-      if(deleteChatBot){
+      if (deleteChatBot) {
         let result = await deleteBot(deleteChatBot.bid)
-        if(result && result.message){
+        if (result && result.message) {
           toast.success(result.message)
           handleClose()
           setDeleteChatBot(null)
           localStorage.setItem(
             "bots",
-            JSON.stringify(JSON.parse(localStorage.getItem("bots")).filter((item)=>item.bid != deleteChatBot.bid))
+            JSON.stringify(JSON.parse(localStorage.getItem("bots")).filter((item) => item.bid != deleteChatBot.bid))
           );
           context.dispatch({
             type: "DELETE_BOT",
             payload: {
               ...context.state,
-              bots: JSON.parse(localStorage.getItem("bots")).filter((item)=>item.bid != deleteChatBot.bid),
+              bots: JSON.parse(localStorage.getItem("bots")).filter((item) => item.bid != deleteChatBot.bid),
             },
           });
         }
@@ -144,7 +145,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                         </Button>
                         <Button
                           variant="outline-danger"
-                          onClick={()=>{
+                          onClick={() => {
                             handleShow(item)
 
                           }}
@@ -212,7 +213,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                       </Button>
                       <Button
                         variant="outline-danger"
-                        onClick={()=>{
+                        onClick={() => {
                           handleShow(item)
                         }}
                         size="sm"
@@ -236,7 +237,7 @@ const ChatBotView = ({ bots, setLoading }) => {
 
         <Modal.Body>
           <p>
-            Bạn chắc chắn xóa <b>bot-demo</b> chứ ?
+            Bạn chắc chắn xóa  chứ ?
           </p>
         </Modal.Body>
 
