@@ -343,7 +343,7 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
     <>
       <Offcanvas show={show} onHide={handleClose} placement="end">
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Tạo sản phẩm</Offcanvas.Title>
+          <Offcanvas.Title>{productToUpdate ? "Sửa sản phẩm" :"Tạo sản phẩm"} </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Form>
