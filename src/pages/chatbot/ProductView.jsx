@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Sidebar from "./SideBar";
 
-const ProductView = ({ products, setProducts,setLoading,getProduct }) => {
+const ProductView = ({ products, setProducts, setLoading, getProduct }) => {
   return (
     <div style={{ display: "flex" }}>
       <Sidebar />
@@ -62,11 +62,11 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
     console.log(productToDelete)
     try {
       setLoading(true);
-      const response = await deleteProduct(id,productToDelete)
+      const response = await deleteProduct(id, productToDelete)
 
-     if(response && response.message){
-      toast.success(response.message)
-     }
+      if (response && response.message) {
+        toast.success(response.message)
+      }
       await getProduct();
     } catch (err) {
       console.error(err);
@@ -78,9 +78,7 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
     }
   };
 
-  const handleEditFAQ = (id) => {
-    alert(`Chỉnh sửa FAQ với ID: ${id}`);
-  };
+
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -272,8 +270,8 @@ import { toast } from "react-toastify";
 
 // Đảm bảo bạn đã cài đặt và import Bootstrap CSS
 
-const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToUpdate ,setProductToUpdate}) => {
-   const { id } = useParams();
+const CreateProductOffcanvas = ({ show, setShow, setLoading, getProduct, productToUpdate, setProductToUpdate }) => {
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     name: "",
     gender: "male",
@@ -284,11 +282,11 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
     description: "",
     bot: ""
   });
-  useEffect(()=>{
-    if(productToUpdate){
+  useEffect(() => {
+    if (productToUpdate) {
       setFormData(productToUpdate)
     }
-  },[productToUpdate])
+  }, [productToUpdate])
   const handleClose = () => {
     setShow(false);
     setFormData({
@@ -313,28 +311,28 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
     });
   };
 
-  const handleSave = async() => {
+  const handleSave = async () => {
     setLoading(true)
-    if (!formData.name ) {
+    if (!formData.name) {
       alert("Vui lòng điền đầy đủ tên sản phẩm và bot.");
       return;
     }
     try {
       let result
-      if(productToUpdate){
-        result = await updateProduct(id,formData.id,formData)
-      }else{
-        result = await createProduct(id,formData)
+      if (productToUpdate) {
+        result = await updateProduct(id, formData.id, formData)
+      } else {
+        result = await createProduct(id, formData)
       }
-      
-      if(result && result.message){
+
+      if (result && result.message) {
         toast.success(result.message)
         setProductToUpdate(null)
         await getProduct()
       }
     } catch (error) {
       console.log(error)
-    }finally{
+    } finally {
       handleClose();
       setLoading(false)
 
@@ -345,7 +343,7 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
     <>
       <Offcanvas show={show} onHide={handleClose} placement="end">
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title>{productToUpdate ? "Sửa sản phẩm" :"Tạo sản phẩm"} </Offcanvas.Title>
+          <Offcanvas.Title>{productToUpdate ? "Sửa sản phẩm" : "Tạo sản phẩm"} </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Form>

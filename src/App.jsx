@@ -6,6 +6,7 @@ import { Blank } from "./layouts/Blank";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import 'leaflet/dist/leaflet.css';
 import { createContext, useContext, useEffect, useReducer } from "react";
 export const chatContext = createContext({});
 
@@ -17,10 +18,10 @@ const reducer = (state, action) => {
         bots: action.payload.bots,
       };
     case "DELETE_BOT":
-        return {
-          ...state,
-          bots: action.payload.bots,
-        };
+      return {
+        ...state,
+        bots: action.payload.bots,
+      };
     case "LIST_BOT":
       return {
         ...state,
@@ -51,7 +52,7 @@ function App() {
     location.pathname.includes("auth") ||
     location.pathname.includes("error") ||
     location.pathname.includes("under-maintenance") |
-      location.pathname.includes("blank");
+    location.pathname.includes("blank");
 
   const [state, dispatch] = useReducer(reducer, {
     bots: [],

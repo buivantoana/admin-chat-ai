@@ -10,24 +10,25 @@ const BranchController = () => {
   const { id } = useParams();
   useEffect(() => {
     if (id) {
-      (async () => {
-        setLoading(true);
-        try {
-          let result = await getBotBranch(id);
-          if (result && result.length > 0) {
-            setProducts(result);
-          }
-        } catch (error) {
-          console.log(error);
-        }
-        setLoading(false);
-      })();
+      getAddress();
     }
   }, [id]);
+  const getAddress = async () => {
+    setLoading(true);
+    try {
+      let result = await getBotBranch(id);
+      if (result && result.length > 0) {
+        setProducts(result);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setLoading(false);
+  }
   return (
     <div>
       {loading && <Loading />}
-      <BranchView products={products} />
+      <BranchView products={products} setLoading={setLoading} getAddress={getAddress} />
     </div>
   );
 };
