@@ -320,7 +320,7 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
     }
     try {
       let result
-      if(updateProduct){
+      if(productToUpdate){
         result = await updateProduct(id,formData.id,formData)
       }else{
         result = await createProduct(id,formData)
