@@ -237,6 +237,7 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
         show={createFaq}
         setShow={setCreateFaq}
         productToUpdate={productToUpdate}
+        setProductToUpdate={setProductToUpdate}
       />
 
       {/* Modal xác nhận xóa */}
@@ -271,7 +272,7 @@ import { toast } from "react-toastify";
 
 // Đảm bảo bạn đã cài đặt và import Bootstrap CSS
 
-const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToUpdate }) => {
+const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToUpdate ,setProductToUpdate}) => {
    const { id } = useParams();
   const [formData, setFormData] = useState({
     name: "",
@@ -328,6 +329,7 @@ const CreateProductOffcanvas = ({ show, setShow,setLoading,getProduct,productToU
       
       if(result && result.message){
         toast.success(result.message)
+        setProductToUpdate(null)
         await getProduct()
       }
     } catch (error) {
