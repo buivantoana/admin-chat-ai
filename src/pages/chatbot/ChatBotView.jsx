@@ -110,7 +110,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                           onClick={() => handleNavigate(item.bid)}
                         >
                           <img
-                            src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
+                            src={item.avatar ? `data:image/png;base64,${item.avatar}` : "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"}
                             width={50}
                             height={50}
                             className="rounded-circle me-2"
@@ -185,7 +185,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                   <tr>
                     <td onClick={() => handleNavigate(item.bid)}>
                       <img
-                        src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
+                        src={item.avatar ? `data:image/png;base64,${item.avatar}` : "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"}
                         width={50}
                         height={50}
                         className="rounded-circle me-2"
@@ -274,6 +274,7 @@ const CreateChatbotModal = ({ show, setShow, setLoading }) => {
   const [speed, setSpeed] = useState(1);
   const [active, setActive] = useState(true);
   const [owner, setOwner] = useState(null);
+  const [fileImage, setFileImage] = useState(null);
   const context = useChatContext();
   useEffect(() => {
     (async () => {
@@ -298,23 +299,24 @@ const CreateChatbotModal = ({ show, setShow, setLoading }) => {
       const newAvatar = URL.createObjectURL(file);
       setAvatars((prev) => [newAvatar, ...prev]);
       setSelectedAvatar(newAvatar);
+      setFileImage(file)
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
-    const payload = {
-      name: botName,
-      owner: owner,
-      // avatar: selectedAvatar || null,
-      info: info,
-      language: language,
-      speed: speed,
-      active: active,
-      created: new Date().toISOString(),
-    };
+    const formData = new FormData();
+    formData.append("name", botName);
+    formData.append("info", info);
+    formData.append("language", language);
+    formData.append("speed", speed.toString());
+    formData.append("active", active.toString());
+    formData.append("owner", owner || "test_owner");
+    if (fileImage) {
+      formData.append("avatar", fileImage);
+    }
     try {
-      let result = await createBot(payload);
+      let result = await createBot(formData);
       if (result && result.bid) {
         toast.success("Tạo Bot thành công");
         setBotName("");
