@@ -45,6 +45,7 @@ const ChatBot = ({ setLoading }) => {
   const [info, setInfo] = useState("");
   const [language, setLanguage] = useState("vi");
   const [speed, setSpeed] = useState(1);
+  const [fileImage, setFileImage] = useState(null);
   const context = useChatContext();
 
   useEffect(() => {
@@ -60,7 +61,7 @@ const ChatBot = ({ setLoading }) => {
             setLanguage(result.language || "vi");
             setSpeed(result.speed || 1);
             setAvatar(
-              result.avatar ||
+              result.avatar ?`data:image/png;base64,${result.avatar}`:
                 "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
             );
           }
@@ -80,6 +81,7 @@ const ChatBot = ({ setLoading }) => {
         setAvatar(reader.result);
       };
       reader.readAsDataURL(file);
+      setFileImage(file)
     }
   };
 
@@ -91,10 +93,17 @@ const ChatBot = ({ setLoading }) => {
       info: info,
       language: language,
       speed: speed,
-      created: new Date().toISOString(),
     };
+    const formData = new FormData();
+    formData.append("name", botName);
+    formData.append("info", info);
+    formData.append("language", language);
+    formData.append("speed", speed.toString());
+    if (fileImage) {
+      formData.append("avatar", fileImage);
+    }
     try {
-      let result = await editBot(id, updatedBot);
+      let result = await editBot(id, formData);
       if (result && Object.keys(result).length > 0) {
         localStorage.setItem(
           "bots",

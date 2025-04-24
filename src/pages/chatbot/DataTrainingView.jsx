@@ -134,8 +134,13 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
                </Button>
             </div> */}
             <div>
-               <Button variant="primary" onClick={() => setCreateFaq(true)} style={{ fontSize: "13px", padding: "5px 7px" }}>
+               <Button variant="primary" onClick={() => setCreateFaq(true)} style={{ fontSize: "13px", padding: "5px 7px",marginRight: "10px"  }}>
                   ADD FAQs
+               </Button>
+            </div>
+            <div>
+               <Button variant="primary"  style={{ fontSize: "13px", padding: "5px 7px" }}>
+                 Huấn Luyện
                </Button>
             </div>
          </div>

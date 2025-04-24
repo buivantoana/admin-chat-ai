@@ -87,6 +87,7 @@ export async function editBot(idBot, body) {
     let token = localStorage.getItem("token");
     const response = await api.put(`${url_api}/bots/${idBot}`, body, {
       headers: {
+        'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
       },
     });
