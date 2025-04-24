@@ -24,7 +24,7 @@ const Sidebar = () => {
       }}
     >
       {/* Avatar + Tên bot */}
-      <div className="d-flex align-items-center mb-3">
+      {/* <div className="d-flex align-items-center mb-3">
         <img
           src="https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
           alt="Avatar"
@@ -32,7 +32,7 @@ const Sidebar = () => {
           width={40}
         />
         <strong>bot-demo</strong>
-      </div>
+      </div> */}
 
       {/* Nút Chat */}
       <Button
