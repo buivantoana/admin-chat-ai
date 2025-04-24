@@ -5,7 +5,7 @@ import inbox from "../../images/ic_dashboard_inbox.webp";
 import facebook from "../../images/ic_dashboard_messenger.webp";
 import zalo from "../../images/ic_dashboard_zalo.webp";
 import website from "../../images/ic_website.webp";
-const MessageManagementView = ({ botChat, setChatBot,loading }) => {
+const MessageManagementView = ({ botChat, setChatBot, loading }) => {
    const [chat, setChat] = useState(null)
    const initialLoad = useRef(true);
    useEffect(() => {
@@ -26,7 +26,7 @@ export default MessageManagementView
 
 
 
-const ChatSidebar = ({ botChat, setChat, chat ,initialLoad ,loading}) => {
+const ChatSidebar = ({ botChat, setChat, chat, initialLoad, loading }) => {
    const [show, setShow] = useState(false);
    const [chatChanel, setChatChanel] = useState('inbox');
    const handleShow = () => setShow(true);
@@ -79,87 +79,89 @@ const ChatSidebar = ({ botChat, setChat, chat ,initialLoad ,loading}) => {
 
          {/* Chat Item */}
          <div className='card-hover3' style={{ height: "45vh", overflowY: "scroll" }}>
-            {loading ? <div style={{width:"100%", display:"flex",justifyContent:"center"}}><Spinner size='15'/></div> :
-            <> {botChat && botChat.length > 0 && botChat.map((item) => {
-               let notify = false
-               console.log(localStorage.getItem("notify_chat"))
-               if(localStorage.getItem("notify_chat")){
-                  if(JSON.parse(localStorage.getItem("notify_chat")).filter((ix)=>ix == item.cid)[0]){
-                     notify = true
+            {loading ? <div style={{ width: "100%", display: "flex", justifyContent: "center" }}><Spinner size='15' /></div> :
+               <> {botChat && botChat.length > 0 && botChat.map((item) => {
+                  let notify = false
+                  console.log(localStorage.getItem("notify_chat"))
+                  if (localStorage.getItem("notify_chat")) {
+                     if (JSON.parse(localStorage.getItem("notify_chat")).filter((ix) => ix == item.cid)[0]) {
+                        notify = true
+                     }
                   }
-               }
-               if(chatChanel == "inbox"){
-               return <Card onClick={() => {
-                  initialLoad.current = true
-                  setChat(item)}} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
-                      {notify &&
-                           <div style={{color:"white",borderRadius:"50%" ,width:"13px",height:"13px",background:"red",position:"absolute",top:"-3px",right:"-1px",zIndex:"100"}}></div>}
-                  <div className="d-flex align-items-center">
-                     <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                        style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                        {item.avatar ?<img src={item.avatar} style={{ width: "40px", height: "40px",borderRadius:"50%"}} /> :"B"}
-                     </div>
-                     <div className="ms-2">
-                        <div style={{ display: "flex", justifyContent: "space-between", }}>
-                           <div className="fw-bold">{item.name ? item.name:"Bot"}</div>
-                          
-                        </div>
-                        <small className="text-muted" style={{textTransform:"capitalize"}}>{item.platform}</small>
-                     </div>
-                  </div>
-                  <div className="mt-1 d-flex align-items-center">
-                     <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
-
-                  </div>
-                  <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
-                     <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
-                        <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} /> 
-                     </Dropdown.Toggle>
-                     <Dropdown.Menu>
-                        <Dropdown.Item>Bỏ xem</Dropdown.Item>
-                        <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
-                     </Dropdown.Menu>
-                  </Dropdown>
-               </Card>
-               }
-               if(chatChanel==item.platform){
-                  return <Card onClick={() => {
-                     initialLoad.current = true
-                     setChat(item)}} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
-                         {notify &&
-                              <div style={{color:"white",borderRadius:"50%" ,width:"13px",height:"13px",background:"red",position:"absolute",top:"-3px",right:"-1px",zIndex:"100"}}></div>}
-                     <div className="d-flex align-items-center">
-                        <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                           style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                           B
-                        </div>
-                        <div className="ms-2">
-                           <div style={{ display: "flex", justifyContent: "space-between", }}>
-                              <div className="fw-bold">Bot</div>
-                             
+                  if (chatChanel == "inbox") {
+                     return <Card onClick={() => {
+                        initialLoad.current = true
+                        setChat(item)
+                     }} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+                        {notify &&
+                           <div style={{ color: "white", borderRadius: "50%", width: "13px", height: "13px", background: "red", position: "absolute", top: "-3px", right: "-1px", zIndex: "100" }}></div>}
+                        <div className="d-flex align-items-center">
+                           <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                              style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
+                              {item.avatar ? <img src={item.avatar} style={{ width: "40px", height: "40px", borderRadius: "50%" }} /> : "B"}
                            </div>
-                           <small className="text-muted" style={{textTransform:"capitalize"}}>{item.platform}</small>
+                           <div className="ms-2">
+                              <div style={{ display: "flex", justifyContent: "space-between", }}>
+                                 <div className="fw-bold">{item.name ? item.name : "Bot"}</div>
+
+                              </div>
+                              <small className="text-muted" style={{ textTransform: "capitalize" }}>{item.platform}</small>
+                           </div>
                         </div>
-                     </div>
-                     <div className="mt-1 d-flex align-items-center">
-                        <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
-   
-                     </div>
-                     <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
-                        <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
-                           <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} /> 
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                           <Dropdown.Item>Bỏ xem</Dropdown.Item>
-                           <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
-                        </Dropdown.Menu>
-                     </Dropdown>
-                  </Card>
-               }
-            })}
-</>
+                        <div className="mt-1 d-flex align-items-center">
+                           <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+
+                        </div>
+                        <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
+                           <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
+                              <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
+                           </Dropdown.Toggle>
+                           <Dropdown.Menu>
+                              <Dropdown.Item>Bỏ xem</Dropdown.Item>
+                              <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
+                           </Dropdown.Menu>
+                        </Dropdown>
+                     </Card>
+                  }
+                  if (chatChanel == item.platform) {
+                     return <Card onClick={() => {
+                        initialLoad.current = true
+                        setChat(item)
+                     }} className="mb-2 p-2 card-hover2 border-primary" style={{ borderRadius: "8px", marginTop: "18px", border: "1px solid #ddd", position: "relative", background: chat && chat.cid == item.cid ? "#f5e8ff" : "" }}>
+                        {notify &&
+                           <div style={{ color: "white", borderRadius: "50%", width: "13px", height: "13px", background: "red", position: "absolute", top: "-3px", right: "-1px", zIndex: "100" }}></div>}
+                        <div className="d-flex align-items-center">
+                           <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                              style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
+                              B
+                           </div>
+                           <div className="ms-2">
+                              <div style={{ display: "flex", justifyContent: "space-between", }}>
+                                 <div className="fw-bold">Bot</div>
+
+                              </div>
+                              <small className="text-muted" style={{ textTransform: "capitalize" }}>{item.platform}</small>
+                           </div>
+                        </div>
+                        <div className="mt-1 d-flex align-items-center">
+                           <span style={{ background: "rgb(173, 216, 230)", color: "white", borderRadius: "5px", fontSize: "11px", padding: "1px 2px" }}>Tư vấn</span>
+
+                        </div>
+                        <Dropdown key={"none"} className="custom-dropdown" style={{ position: "absolute", right: "10px", top: "10px" }}>
+                           <Dropdown.Toggle as="div" variant="link" className="text-dark p-0">
+                              <FiMoreHorizontal style={{ cursor: "pointer" }} size={23} />
+                           </Dropdown.Toggle>
+                           <Dropdown.Menu>
+                              <Dropdown.Item>Bỏ xem</Dropdown.Item>
+                              <Dropdown.Item style={{ color: "red" }}>Xóa cuộc hội thoại</Dropdown.Item>
+                           </Dropdown.Menu>
+                        </Dropdown>
+                     </Card>
+                  }
+               })}
+               </>
             }
-           
+
          </div>
 
          <Modal show={show} onHide={handleClose} centered size="lg">
@@ -284,8 +286,8 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                }
                return item;
             }));
-            if(localStorage.getItem("notify_chat")){
-               localStorage.setItem("notify_chat",JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
+            if (localStorage.getItem("notify_chat")) {
+               localStorage.setItem("notify_chat", JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
             }
             setUnreadCount(0);
          }
@@ -368,23 +370,23 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
             <Row>
                <Col md={12} >
 
-                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh",position:"relative" }}>
-                  {loading && (
-                           <div className="d-flex justify-content-center align-items-center" style={{ position: 'absolute', width:"100%",height:"100%",background:"white",zIndex:1,borderRadius:"10px" }}>
-                              <Spinner animation="border" variant="primary" />
-                           </div>
-                        )}
+                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh", position: "relative" }}>
+                     {loading && (
+                        <div className="d-flex justify-content-center align-items-center" style={{ position: 'absolute', width: "100%", height: "100%", background: "white", zIndex: 1, borderRadius: "10px" }}>
+                           <Spinner animation="border" variant="primary" />
+                        </div>
+                     )}
                      <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
                         <div style={{ display: "flex", gap: "10px" }}>
                            <div>
                               <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
                                  style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                                 B
+                                 {chat.avatar ? <img src={chat.avatar} style={{ width: "40px", height: "40px", borderRadius: "50%" }} /> : "B"}
                               </div>
                               <p style={{ padding: "0 2px", background: "rgb(173, 216, 230)", borderRadius: "5px", fontSize: "11px", margin: 0, marginTop: "2px", color: "white" }}>Tư vấn</p>
                            </div>
                            <div>
-                              <strong>Bot <FiTag /></strong>
+                              <strong>{chat.name ? chat.name:"Bot"} <FiTag /></strong>
                               <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
                            </div>
                         </div>
@@ -401,8 +403,8 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                         </div>
                      </Card.Header>
                      <Card.Body ref={chatRef} style={{ height: "55vh", overflowY: "auto", transition: "1s" }}>
-                        
-                        
+
+
 
                         {messages.map((msg, index) => (
                            <div
@@ -411,7 +413,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                            >
                               <div
                                  className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"}`}
-                                 style={{ 
+                                 style={{
                                     maxWidth: "70%",
                                     opacity: msg.isRead ? 1 : 0.7 // Tin nhắn chưa đọc sẽ mờ hơn
                                  }}
