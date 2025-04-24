@@ -97,11 +97,11 @@ const ChatSidebar = ({ botChat, setChat, chat ,initialLoad ,loading}) => {
                   <div className="d-flex align-items-center">
                      <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
                         style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                        B
+                        {item.avatar ?<img src={item.avatar} style={{ width: "40px", height: "40px",borderRadius:"50%"}} /> :"B"}
                      </div>
                      <div className="ms-2">
                         <div style={{ display: "flex", justifyContent: "space-between", }}>
-                           <div className="fw-bold">Bot</div>
+                           <div className="fw-bold">{item.name ? item.name:"Bot"}</div>
                           
                         </div>
                         <small className="text-muted" style={{textTransform:"capitalize"}}>{item.platform}</small>
