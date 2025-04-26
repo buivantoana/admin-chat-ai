@@ -1,19 +1,5 @@
-import React, { useEffect } from 'react'
-import Sidebar from './SideBar'
-
-const DataTrainingView = ({ products, setProducts, setLoading, getProduct }) => {
-   return (
-      <div style={{ display: "flex" }}><Sidebar />
-         <div style={{ width: "75%", background: "white", borderBottomRightRadius: "10px", borderTopRightRadius: "10px", paddingTop: "20px", height: "77vh", overflowY: "scroll" }}>
-            <DataTrainingViewRight products={products} getProduct={getProduct} setLoading={setLoading} setProducts={setProducts} />
-         </div>
-      </div>
-   )
-}
-
-export default DataTrainingView
-
-import { useState } from "react";
+import React, { useEffect, useState } from 'react';
+import Sidebar from './SideBar';
 import {
    Table,
    Button,
@@ -22,6 +8,9 @@ import {
    Row,
    Col,
    Pagination,
+   Modal,
+   Offcanvas,
+   Spinner,
 } from "react-bootstrap";
 import {
    FaEdit,
@@ -29,16 +18,36 @@ import {
    FaSortAmountUp,
    FaTrash,
 } from "react-icons/fa";
+import { useParams } from "react-router-dom";
+import { toast } from 'react-toastify';
+import { createQuestion, deleteQuestion, updateQuestion, trainQuestion, getStatusQuestion } from '../../services/questions';
+
+const DataTrainingView = ({ products, setProducts, setLoading, getProduct }) => {
+   return (
+      <div style={{ display: "flex" }}>
+         <Sidebar />
+         <div style={{ width: "75%", background: "white", borderBottomRightRadius: "10px", borderTopRightRadius: "10px", paddingTop: "20px", height: "77vh", overflowY: "scroll" }}>
+            <DataTrainingViewRight
+               products={products}
+               getProduct={getProduct}
+               setLoading={setLoading}
+               setProducts={setProducts}
+            />
+         </div>
+      </div>
+   );
+};
 
 function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }) {
    const [importFaq, setImportFaq] = useState(false);
    const [createFaq, setCreateFaq] = useState(false);
    const [currentPage, setCurrentPage] = useState(1);
    const [itemsPerPage, setItemsPerPage] = useState(5);
-   const { id } = useParams();
    const [showDeleteModal, setShowDeleteModal] = useState(false);
    const [productToDelete, setProductToDelete] = useState(null);
    const [productToUpdate, setProductToUpdate] = useState(null);
+   const [isTraining, setIsTraining] = useState(false); // Trạng thái loading cho nút Huấn luyện
+   const { id } = useParams();
 
    const handleConfirmDelete = (productId) => {
       setProductToDelete(productId);
@@ -48,18 +57,17 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
    const handleDelete = async () => {
       if (!productToDelete) return;
 
-      console.log(productToDelete)
       try {
          setLoading(true);
-         const response = await deleteQuestion(id, productToDelete)
+         const response = await deleteQuestion(id, productToDelete);
 
          if (response && response.message) {
-            toast.success(response.message)
+            toast.success(response.message);
          }
          await getProduct();
       } catch (err) {
          console.error(err);
-         alert("Lỗi khi xóa sản phẩm");
+         toast.error("Lỗi khi xóa sản phẩm");
       } finally {
          setLoading(false);
          setShowDeleteModal(false);
@@ -67,7 +75,42 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
       }
    };
 
-
+   const handleTrain = async () => {
+      setIsTraining(true);
+      try {
+         const response = await trainQuestion(id);
+         if (response && response.train_status) {
+            toast.info("Đã bắt đầu huấn luyện");
+            // Bắt đầu kiểm tra trạng thái huấn luyện
+            const intervalId = setInterval(async () => {
+               try {
+                  const statusResponse = await getStatusQuestion(id);
+                  if (statusResponse.train_status === "succeeded") {
+                     clearInterval(intervalId);
+                     setIsTraining(false);
+                     toast.success("Huấn luyện hoàn tất!");
+                  } else if (statusResponse.detail) {
+                     clearInterval(intervalId);
+                     setIsTraining(false);
+                     toast.error(statusResponse.message || "Huấn luyện thất bại");
+                  }
+               } catch (err) {
+                  clearInterval(intervalId);
+                  setIsTraining(false);
+                  console.error("Error checking train status:", err);
+                  toast.error("Lỗi khi kiểm tra trạng thái huấn luyện");
+               }
+            }, 10000); // Kiểm tra mỗi 2 giây
+         } else {
+            toast.info(response.detail);
+            throw new Error("Không thể bắt đầu huấn luyện");
+         }
+      } catch (err) {
+         setIsTraining(false);
+         console.error("Error starting training:", err);
+         toast.error("Lỗi khi bắt đầu huấn luyện");
+      }
+   };
 
    const indexOfLastItem = currentPage * itemsPerPage;
    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -128,19 +171,37 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
             <div>
                <h6 style={{ margin: 0, marginRight: "10px" }}>Tôi phải thêm câu hỏi bằng cách nào?</h6>
             </div>
-            {/* <div>
-               <Button variant="primary" onClick={() => setImportFaq(true)} style={{ fontSize: "13px", padding: "5px 7px" }} className="me-2">
-                  Import FAQs
-               </Button>
-            </div> */}
             <div>
-               <Button variant="primary" onClick={() => setCreateFaq(true)} style={{ fontSize: "13px", padding: "5px 7px",marginRight: "10px"  }}>
+               <Button
+                  variant="primary"
+                  onClick={() => setCreateFaq(true)}
+                  style={{ fontSize: "13px", padding: "5px 7px", marginRight: "10px" }}
+               >
                   ADD FAQs
                </Button>
             </div>
             <div>
-               <Button variant="primary"  style={{ fontSize: "13px", padding: "5px 7px" }}>
-                 Huấn Luyện
+               <Button
+                  variant="primary"
+                  style={{ fontSize: "13px", padding: "5px 7px" }}
+                  onClick={handleTrain}
+                  disabled={isTraining}
+               >
+                  {isTraining ? (
+                     <>
+                        <Spinner
+                           as="span"
+                           animation="border"
+                           size="sm"
+                           role="status"
+                           aria-hidden="true"
+                           className="me-2"
+                        />
+                        Đang huấn luyện...
+                     </>
+                  ) : (
+                     "Huấn luyện"
+                  )}
                </Button>
             </div>
          </div>
@@ -160,16 +221,13 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
                   <tr key={faq.id}>
                      <td>{faq.question}</td>
                      <td>{faq.answer}</td>
-                     <td>
-                        {faq.status ? "Hoạt động" : "Không hoạt động"}
-                     </td>
-
+                     <td>{faq.status ? "Hoạt động" : "Không hoạt động"}</td>
                      <td>
                         <Button
                            variant="link"
                            onClick={() => {
-                              setCreateFaq(true)
-                              setProductToUpdate(faq)
+                              setCreateFaq(true);
+                              setProductToUpdate(faq);
                            }}
                            className="text-primary"
                         >
@@ -202,10 +260,10 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
                onChange={handleItemsPerPageChange}
                style={{ width: "auto" }}
             >
-               <option value={5}>5 </option>
-               <option value={10}>10 </option>
-               <option value={20}>20 </option>
-               <option value={50}>50 </option>
+               <option value={5}>5</option>
+               <option value={10}>10</option>
+               <option value={20} > 20</option>
+               <option value={50}>50</option>
             </Form.Select>
 
             <Pagination>
@@ -260,33 +318,23 @@ function DataTrainingViewRight({ products, setProducts, setLoading, getProduct }
    );
 }
 
-import { Modal } from "react-bootstrap";
-
-
-
-import { Offcanvas } from "react-bootstrap";
-import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import { createQuestion, deleteQuestion, updateQuestion } from '../../services/questions'
-
-// Đảm bảo bạn đã cài đặt và import Bootstrap CSS
-
 const CreateProductOffcanvas = ({ show, setShow, setLoading, getProduct, productToUpdate, setProductToUpdate }) => {
    const { id } = useParams();
    const [formData, setFormData] = useState({
       question: '',
       answer: '',
-      status: '1', // Giá trị mặc định cho dropdown
+      status: '1',
    });
+
    useEffect(() => {
       if (productToUpdate) {
-         setFormData({ ...productToUpdate, status: productToUpdate?.status ? '1' : '2' })
+         setFormData({ ...productToUpdate, status: productToUpdate?.status ? '1' : '2' });
       }
-   }, [productToUpdate])
+   }, [productToUpdate]);
+
    const handleClose = () => {
-      setProductToUpdate(null)
+      setProductToUpdate(null);
       setShow(false);
-      // Reset form khi đóng Offcanvas
       setFormData({
          question: '',
          answer: '',
@@ -303,96 +351,91 @@ const CreateProductOffcanvas = ({ show, setShow, setLoading, getProduct, product
    };
 
    const handleSave = async () => {
-      setLoading(true)
+      setLoading(true);
       if (!formData.question || !formData.answer) {
-         alert("Vui lòng điền đầy đủ.");
+         toast.error("Vui lòng điền đầy đủ.");
+         setLoading(false);
          return;
       }
       try {
-         let result
+         let result;
          if (productToUpdate) {
-            result = await updateQuestion(id, formData.id, { ...formData, status: formData.status == '1' ? true : false })
+            result = await updateQuestion(id, formData.id, { ...formData, status: formData.status === '1' });
          } else {
-            result = await createQuestion(id, { ...formData, status: formData.status == '1' ? true : false })
+            result = await createQuestion(id, { ...formData, status: formData.status === '1' });
          }
 
          if (result && result.message) {
-            toast.success(result.message)
-            setProductToUpdate(null)
-            await getProduct()
+            toast.success(result.message);
+            setProductToUpdate(null);
+            await getProduct();
          }
       } catch (error) {
-         console.log(error)
+         console.error(error);
+         toast.error("Lỗi khi lưu câu hỏi");
       } finally {
          handleClose();
-         setLoading(false)
-
+         setLoading(false);
       }
    };
 
    return (
-      <>
-         <Offcanvas show={show} onHide={handleClose} placement="end">
-            <Offcanvas.Header closeButton>
-               <Offcanvas.Title>Tạo FAQs</Offcanvas.Title>
-            </Offcanvas.Header>
-            <Offcanvas.Body>
-               <Form>
-                  {/* Trạng thái */}
-                  <Form.Group controlId="formStatus" className="mb-3 d-flex align-items-center">
-                     <Form.Label className="me-3">Trạng thái</Form.Label>
-                     <Form.Select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        style={{ width: 'auto' }}
-                     >
-                        <option value="1">Hoạt động</option>
-                        <option value="2">Không hoạt động</option>
-                     </Form.Select>
-                  </Form.Group>
+      <Offcanvas show={show} onHide={handleClose} placement="end">
+         <Offcanvas.Header closeButton>
+            <Offcanvas.Title>Tạo FAQs</Offcanvas.Title>
+         </Offcanvas.Header>
+         <Offcanvas.Body>
+            <Form>
+               <Form.Group controlId="formStatus" className="mb-3 d-flex align-items-center">
+                  <Form.Label className="me-3">Trạng thái</Form.Label>
+                  <Form.Select
+                     name="status"
+                     value={formData.status}
+                     onChange={handleChange}
+                     style={{ width: 'auto' }}
+                  >
+                     <option value="1">Hoạt động</option>
+                     <option value="2">Không hoạt động</option>
+                  </Form.Select>
+               </Form.Group>
 
-                  {/* Dữ liệu huấn luyện */}
-                  <Form.Group controlId="formQuestion" className="mb-3">
-                     <Form.Label>Câu hỏi</Form.Label>
-                     <div className="d-flex align-items-center">
-
-                        <Form.Control
-                           type="text"
-                           name="question"
-                           value={formData.question}
-                           onChange={handleChange}
-                           placeholder="Nhập câu hỏi"
-                        />
-                     </div>
-                  </Form.Group>
-
-                  {/* Câu trả lời */}
-                  <Form.Group controlId="formAnswer" className="mb-3">
-                     <Form.Label>Trả lời</Form.Label>
+               <Form.Group controlId="formQuestion" className="mb-3">
+                  <Form.Label>Câu hỏi</Form.Label>
+                  <div className="d-flex align-items-center">
                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="answer"
-                        value={formData.answer}
+                        type="text"
+                        name="question"
+                        value={formData.question}
                         onChange={handleChange}
-                        placeholder="Nhập câu trả lời"
+                        placeholder="Nhập câu hỏi"
                      />
-                  </Form.Group>
-               </Form>
+                  </div>
+               </Form.Group>
 
-               {/* Nút điều khiển */}
-               <div className="d-flex justify-content-end mt-4">
-                  <Button variant="outline-secondary" onClick={handleClose} className="me-2">
-                     Thoát
-                  </Button>
-                  <Button variant="primary" onClick={handleSave}>
-                     Lưu câu hỏi
-                  </Button>
-               </div>
-            </Offcanvas.Body>
-         </Offcanvas>
-      </>
+               <Form.Group controlId="formAnswer" className="mb-3">
+                  <Form.Label>Trả lời</Form.Label>
+                  <Form.Control
+                     as="textarea"
+                     rows={3}
+                     name="answer"
+                     value={formData.answer}
+                     onChange={handleChange}
+                     placeholder="Nhập câu trả lời"
+                  />
+               </Form.Group>
+            </Form>
+
+            <div className="d-flex justify-content-end mt-4">
+               <Button variant="outline-secondary" onClick={handleClose} className="me-2">
+                  Thoát
+               </Button>
+               <Button variant="primary" onClick={handleSave}>
+                  Lưu câu hỏi
+               </Button>
+            </div>
+         </Offcanvas.Body>
+      </Offcanvas>
    );
 };
 
+export default DataTrainingView;

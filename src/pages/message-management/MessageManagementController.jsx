@@ -96,36 +96,38 @@ export const MessageManagementController = () => {
    }, [localStorage.getItem("token")]);
    useEffect(() => {
       if (id) {
-         (async () => {
-            setLoading(true)
-            try {
-               let result = await botGetAllChat(id)
-               console.log(result);
-               if (result) {
-                  setChatBot(result.map((item) => {
-                     return {
-                        ...item,
-                        messages: item.messages.map((ix) => {
-                           return {
-                              ...ix,
-                              isRead: true
-                           }
-                        })
-                     }
-                  }))
-               }
-            } catch (error) {
-               console.log(error);
-            }
-            setLoading(false)
-         })()
+         getChat()
       }
    }, [id])
+   const getChat = async () => {
+      setLoading(true)
+      try {
+         let result = await botGetAllChat(id)
+         console.log(result);
+         if (result) {
+            setChatBot(result.map((item) => {
+               return {
+                  ...item,
+                  messages: item.messages.map((ix) => {
+                     return {
+                        ...ix,
+                        isRead: true
+                     }
+                  })
+               }
+            }))
+         }
+      } catch (error) {
+         console.log(error);
+      }
+      setLoading(false)
+   }
    return <>
-      <MessageManagementView loading={loading} botChat={botChat} setChatBot={setChatBot} />
+      <MessageManagementView getChat={getChat} loading={loading} botChat={botChat} setChatBot={setChatBot} />
    </>
 
 }
+
 function getFormattedDate() {
    const now = new Date();
    const isoString = now.toISOString(); // "2025-03-27T10:19:53.512Z"

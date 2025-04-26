@@ -239,7 +239,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    const chatRef = useRef(null);
    const lastScrollTop = useRef(0);
    const [loading, setLoading] = useState(false);
-   const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
+
 
    // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
@@ -273,24 +273,27 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
          lastScrollTop.current = scrollTop;
 
          // Kiểm tra nếu cuộn đến cuối
-         if (scrollTop + clientHeight >= scrollHeight - 5) {
-            const updatedMessages = messages.map(msg => ({
-               ...msg,
-               isRead: true
-            }));
-            setChatBot(botChat.map((item) => {
-               if (item.cid === chat.cid) {
-                  return {
-                     ...item,
-                     messages: updatedMessages
-                  };
+         if (messages.filter((item) => item.isRead == false)[0]) {
+            if (scrollTop + clientHeight >= scrollHeight - 5) {
+               const updatedMessages = messages.map(msg => ({
+                  ...msg,
+                  isRead: true
+               }));
+
+               setChatBot(botChat.map((item) => {
+                  if (item.cid === chat.cid) {
+                     return {
+                        ...item,
+                        messages: updatedMessages
+                     };
+                  }
+                  return item;
+               }));
+               if (localStorage.getItem("notify_chat")) {
+                  localStorage.setItem("notify_chat", JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
                }
-               return item;
-            }));
-            if (localStorage.getItem("notify_chat")) {
-               localStorage.setItem("notify_chat", JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
+               setUnreadCount(0);
             }
-            setUnreadCount(0);
          }
       };
 
@@ -351,7 +354,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    const triggerFileInput = () => {
       fileInputRef.current.click();
    };
-
+   console.log("AAA result", botChat);
    return (
       <>
          {!chat && <div style={{ width: "68%" }} >
@@ -395,7 +398,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                            {unreadCount > 0 && (
                               <Badge bg="danger">{unreadCount} chưa đọc</Badge>
                            )}
-                           <AutoReplyToggle setIsAutoReplyOn={setIsAutoReplyOn} isAutoReplyOn={isAutoReplyOn} chat={chat} setChatBot={setChatBot} />
+                           <AutoReplyToggle botChat={botChat} chat={chat} setChatBot={setChatBot} />
                            <FiAlertCircle
                               style={{ cursor: "pointer" }}
                               size={23}
@@ -432,7 +435,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                            </div>
                         ))}
                      </Card.Body>
-                     <Card.Footer style={{ background: "white", display: isAutoReplyOn == false ? "block" : "none" }}>
+                     <Card.Footer style={{ background: "white", display: chat.active == false ? "block" : "none" }}>
                         <Form onSubmit={handleSendMessage}>
                            <InputGroup>
                               <Form.Control
@@ -506,9 +509,10 @@ import { toast } from 'react-toastify';
 import { botChatActive } from '../../services/chat_all';
 
 
-const AutoReplyToggle = ({ chat, setChatBot, isAutoReplyOn, setIsAutoReplyOn }) => {
+const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
    console.log("Auto complate", chat)
    const [loading, setLoading] = useState(false);
+   const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
    const { id } = useParams();
    useEffect(() => {
       if (chat) {
@@ -522,12 +526,9 @@ const AutoReplyToggle = ({ chat, setChatBot, isAutoReplyOn, setIsAutoReplyOn }) 
          let result = await botChatActive(id, { active: !isAutoReplyOn }, chat.cid)
          if (result && (result.active == true || result.active == false)) {
             setIsAutoReplyOn(result.active)
-            setChatBot((prev) => prev.map((item) => {
-               if (item.cid == chat.cid) {
-                  return {
-                     ...item,
-                     active: result.active
-                  }
+            setChatBot(botChat.map((item) => {
+               if (item.cid == result.cid) {
+                  return { ...item, active: result.active }
                }
                return item
             }))
