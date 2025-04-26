@@ -22,57 +22,57 @@ export const MessageManagementController = () => {
          try {
             const msg = JSON.parse(event.data);
             if (msg.event === "new_message") {
-              if(localStorage.getItem("notify_chat")){
-                 localStorage.setItem("notify_chat",JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")),msg.data.cid]))
-              }else{
-               localStorage.setItem("notify_chat",JSON.stringify([msg.data.cid]))
-              }
+               if (localStorage.getItem("notify_chat")) {
+                  localStorage.setItem("notify_chat", JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")), msg.data.cid]))
+               } else {
+                  localStorage.setItem("notify_chat", JSON.stringify([msg.data.cid]))
+               }
                setChatBot((prevBotChat) => {
-                  const chatExists = prevBotChat.some((item) => item.cid === newMessage.cid);
+                  const chatExists = prevBotChat.some((item) => item.cid === msg.data.cid);
 
-               if (chatExists) {
-                  // Nếu CID đã tồn tại, thêm tin nhắn mới
-                  return prevBotChat.map((item) => {
-                     if (item.cid === newMessage.cid) {
-                        return {
-                           ...item,
+                  if (chatExists) {
+                     // Nếu CID đã tồn tại, thêm tin nhắn mới
+                     return prevBotChat.map((item) => {
+                        if (item.cid === msg.data.cid) {
+                           return {
+                              ...item,
+                              messages: [
+                                 ...item.messages,
+                                 {
+                                    created: getFormattedDate(),
+                                    role: msg.data.role || "",
+                                    content: msg.data.content || "",
+                                    content_raw: null,
+                                    isRead: false,
+                                 },
+                              ],
+                           };
+                        }
+                        return item;
+                     });
+                  } else {
+                     // Nếu CID chưa tồn tại, tạo cuộc chat mới
+                     return [
+                        ...prevBotChat,
+                        {
+                           cid: msg.data.cid,
+                           bid: msg.data.bid,
+                           name: msg.data.name,
+                           avatar: msg.data.avatar,
                            messages: [
-                              ...item.messages,
                               {
                                  created: getFormattedDate(),
-                                 role: newMessage.role || "",
-                                 content: newMessage.content || "",
+                                 role: msg.data.role || "",
+                                 content: msg.data.content || "",
                                  content_raw: null,
                                  isRead: false,
                               },
                            ],
-                        };
-                     }
-                     return item;
-                  });
-               } else {
-                  // Nếu CID chưa tồn tại, tạo cuộc chat mới
-                  return [
-                     ...prevBotChat,
-                     {
-                        cid: newMessage.cid,
-                        bid: newMessage.bid,
-                        name: newMessage.name,
-                        avatar: newMessage.avatar,
-                        messages: [
-                           {
-                              created: getFormattedDate(),
-                              role: newMessage.role || "",
-                              content: newMessage.content || "",
-                              content_raw: null,
-                              isRead: false,
-                           },
-                        ],
-                     },
-                  ];
+                        },
+                     ];
+                  }
                }
-               }
-                  
+
                );
                console.log("💬 CID:", msg.data.cid);
                console.log("👉 Nội dung:", msg.data.content);
@@ -102,13 +102,13 @@ export const MessageManagementController = () => {
                let result = await botGetAllChat(id)
                console.log(result);
                if (result) {
-                  setChatBot(result.map((item)=>{
+                  setChatBot(result.map((item) => {
                      return {
                         ...item,
-                        messages:item.messages.map((ix)=>{
+                        messages: item.messages.map((ix) => {
                            return {
                               ...ix,
-                              isRead:true
+                              isRead: true
                            }
                         })
                      }

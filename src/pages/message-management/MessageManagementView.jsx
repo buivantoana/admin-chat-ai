@@ -239,6 +239,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    const chatRef = useRef(null);
    const lastScrollTop = useRef(0);
    const [loading, setLoading] = useState(false);
+   const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
 
    // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
@@ -386,7 +387,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                               <p style={{ padding: "0 2px", background: "rgb(173, 216, 230)", borderRadius: "5px", fontSize: "11px", margin: 0, marginTop: "2px", color: "white" }}>Tư vấn</p>
                            </div>
                            <div>
-                              <strong>{chat.name ? chat.name:"Bot"} <FiTag /></strong>
+                              <strong>{chat.name ? chat.name : "Bot"} <FiTag /></strong>
                               <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
                            </div>
                         </div>
@@ -394,7 +395,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                            {unreadCount > 0 && (
                               <Badge bg="danger">{unreadCount} chưa đọc</Badge>
                            )}
-                           <AutoReplyToggle chat={chat} setChatBot={setChatBot} />
+                           <AutoReplyToggle setIsAutoReplyOn={setIsAutoReplyOn} isAutoReplyOn={isAutoReplyOn} chat={chat} setChatBot={setChatBot} />
                            <FiAlertCircle
                               style={{ cursor: "pointer" }}
                               size={23}
@@ -431,7 +432,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                            </div>
                         ))}
                      </Card.Body>
-                     <Card.Footer style={{ background: "white" }}>
+                     <Card.Footer style={{ background: "white", display: isAutoReplyOn == false ? "block" : "none" }}>
                         <Form onSubmit={handleSendMessage}>
                            <InputGroup>
                               <Form.Control
@@ -505,9 +506,8 @@ import { toast } from 'react-toastify';
 import { botChatActive } from '../../services/chat_all';
 
 
-const AutoReplyToggle = ({ chat, setChatBot }) => {
+const AutoReplyToggle = ({ chat, setChatBot, isAutoReplyOn, setIsAutoReplyOn }) => {
    console.log("Auto complate", chat)
-   const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
    const [loading, setLoading] = useState(false);
    const { id } = useParams();
    useEffect(() => {
