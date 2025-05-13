@@ -61,7 +61,7 @@ const ChatBot = ({ setLoading }) => {
             setLanguage(result.language || "vi");
             setSpeed(result.speed || 1);
             setAvatar(
-              result.avatar ?`data:image/png;base64,${result.avatar}`:
+              result.avatar ? `data:image/png;base64,${result.avatar}` :
                 "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"
             );
           }
@@ -256,58 +256,122 @@ const ChatBot = ({ setLoading }) => {
   );
 };
 
-import { useRef } from "react"; // Thêm useRef để tham chiếu input
-import { FiSend, FiTag } from "react-icons/fi";
+import { useRef } from "react";
+import { FiSend, FiTag, FiPaperclip } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import { editBot, getBot } from "../../services/bot";
 import { toast } from "react-toastify";
 import { useChatContext } from "../../App";
+import { botChatMakeDemo } from "../../services/chat_all";
+
 
 function ChatUI() {
+  const { id } = useParams();
   const [messages, setMessages] = useState([
     {
       text: "👋 Hello! How can I help you today?",
-      time: "17:28",
+      time: "23:09", // Cập nhật thời gian theo thời gian hiện tại
       sender: "other",
     },
-    { text: "My email is example@example.com", time: "17:29", sender: "me" },
   ]);
   const [newMessage, setNewMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null); // State để lưu file được chọn
+  const [filePreview, setFilePreview] = useState(null); // State để lưu URL preview của file
+  const fileInputRef = useRef(null);
 
-  const fileInputRef = useRef(null); // Tham chiếu đến input file
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (newMessage.trim()) {
-      setMessages([
-        ...messages,
-        { text: newMessage, time: "17:31", sender: "me" },
-      ]);
-      setNewMessage("");
+  // Hàm xử lý khi chọn file
+  const handleFileUpload = () => {
+    const file = fileInputRef.current.files[0];
+    if (file) {
+      const fileType = file.type.split("/")[0];
+      const fileUrl = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setFilePreview({ type: fileType, url: fileUrl });
     }
   };
 
-  // Hàm xử lý khi chọn file
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const fileUrl = URL.createObjectURL(file); // Tạo URL tạm thời cho file
-      const fileType = file.type.split("/")[0]; // Lấy loại file (image hoặc video)
-      const newMsg = {
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }), // Lấy giờ hiện tại
-        sender: "me",
-      };
+  // Hàm xóa file preview
+  const removeFilePreview = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    fileInputRef.current.value = "";
+  };
 
+  // Hàm gửi tin nhắn và file lên server
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() && !selectedFile) return;
+
+    const newMsg = {
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }), // Thời gian hiện tại (23:11)
+      sender: "me",
+      text: newMessage || "",
+    };
+
+    let fileBase64 = "";
+    if (selectedFile) {
+      fileBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(selectedFile);
+      });
+
+      const fileType = selectedFile.type.split("/")[0];
       if (fileType === "image") {
-        newMsg.image = fileUrl;
+        newMsg.image = URL.createObjectURL(selectedFile);
       } else if (fileType === "video") {
-        newMsg.video = fileUrl;
+        newMsg.video = URL.createObjectURL(selectedFile);
       }
+    }
 
-      setMessages([...messages, newMsg]);
+    // Thêm tin nhắn vào danh sách
+    setMessages([...messages, newMsg]);
+    setNewMessage("");
+    setSelectedFile(null);
+    setFilePreview(null);
+    fileInputRef.current.value = "";
+
+    // Gửi dữ liệu lên server
+    const payload = {
+      senderid: "demo_chatbot",
+      content: newMessage || "",
+      platform: "web",
+      file_raw: fileBase64 || "",
+    };
+
+    try {
+      const response = await botChatMakeDemo(id, payload);
+
+      if (response && Object.keys(response).length > 0) {
+        const serverMsg = {
+          text: response.content,
+          time: new Date(response.created).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          sender: "other",
+        };
+
+        if (response.file_url) {
+          const fileType = response.file_url.split(".").pop().toLowerCase();
+          if (["jpg", "jpeg", "png", "gif"].includes(fileType)) {
+            serverMsg.image = response.file_url;
+          } else if (["mp4", "webm"].includes(fileType)) {
+            serverMsg.video = response.file_url;
+          }
+        }
+
+        setMessages((prevMessages) => [...prevMessages, serverMsg]);
+        toast.success("Message sent successfully!");
+      } else {
+        toast.error("Failed to send message.");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Error sending message.");
     }
   };
 
@@ -355,67 +419,131 @@ function ChatUI() {
                 </div>
                 <div>
                   <strong>
-                    Bùi Văn Toản - 0345282233 <FiTag />
+                    Demo <FiTag />
                   </strong>
                   <p style={{ fontSize: "13px" }}>Website</p>
                 </div>
               </div>
             </Card.Header>
-            <Card.Body style={{ height: "33vh", overflowY: "auto" }}>
+            <Card.Body style={{ height: "38vh", overflowY: "auto" }}>
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`d-flex mb-2 mt-1 ${
-                    msg.sender === "me"
-                      ? "justify-content-end"
-                      : "justify-content-start"
-                  }`}
+                  className={`d-flex mb-2 mt-1 ${msg.sender === "me"
+                    ? "justify-content-end"
+                    : "justify-content-start"
+                    }`}
                 >
                   <div
-                    className={`p-2 rounded ${
-                      msg.sender === "me" ? "bg-primary text-white" : "bg-white"
-                    }`}
+                    className={`p-2 rounded ${msg.sender === "me" ? "bg-primary text-white" : "bg-white"
+                      }`}
                     style={{ maxWidth: "70%" }}
                   >
                     {msg.text && <p className="mb-0">{msg.text}</p>}
-                    {msg.image && (
-                      <img
-                        src={msg.image}
-                        alt="attachment"
-                        className="img-fluid rounded"
-                      />
-                    )}
-                    {msg.video && (
-                      <video controls className="img-fluid rounded">
-                        <source src={msg.video} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    )}
-                    <small className="text-muted">{msg.time}</small>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+
+                      {msg.image && (
+                        <img
+                          src={msg.image}
+                          alt="attachment"
+                          className="img-fluid rounded"
+                          style={{ maxWidth: "100%", marginTop: "5px" }}
+                        />
+                      )}
+                      {msg.video && (
+                        <video
+                          controls
+                          className="img-fluid rounded"
+                          style={{ maxWidth: "100%", marginTop: "5px" }}
+                        >
+                          <source src={msg.video} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
+                      <small style={{ color: msg.sender === "me" ? "white" : "#697A8D" }} >{msg.time}</small>
+                    </div>
                   </div>
                 </div>
               ))}
             </Card.Body>
-            <Card.Footer style={{ background: "white" }}>
+            <Card.Footer style={{ background: "white", padding: "10px" }}>
               <Form onSubmit={handleSendMessage}>
+                {/* Hiển thị preview file nếu có */}
+                {filePreview && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "10px",
+                      position: "relative",
+                    }}
+                  >
+                    {filePreview.type === "image" ? (
+                      <img
+                        src={filePreview.url}
+                        alt="preview"
+                        style={{
+                          maxWidth: "100px",
+                          maxHeight: "100px",
+                          borderRadius: "5px",
+                          marginRight: "10px",
+                        }}
+                      />
+                    ) : (
+                      <video
+                        src={filePreview.url}
+                        style={{
+                          maxWidth: "100px",
+                          maxHeight: "100px",
+                          borderRadius: "5px",
+                          marginRight: "10px",
+                        }}
+                      />
+                    )}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={removeFilePreview}
+                      style={{
+                        position: "absolute",
+                        top: "5px",
+                        right: "5px",
+                        borderRadius: "50%",
+                        padding: "0 6px",
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
                 <InputGroup>
                   <Form.Control
                     type="text"
                     placeholder="Nhập tin nhắn của bạn"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
+                    style={{ borderRadius: "5px", borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
                   />
-                  {/* Nút với icon FiLink để tải file */}
-
-                  {/* Input file ẩn */}
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => fileInputRef.current.click()}
+                    style={{ border: "1px solid #ccc", }}
+                  >
+                    <FiPaperclip />
+                  </Button>
                   <input
                     type="file"
                     ref={fileInputRef}
                     style={{ display: "none" }}
-                    accept="image/*,video/*" // Chỉ chấp nhận image và video
+                    accept="image/*,video/*"
                     onChange={handleFileUpload}
                   />
-                  <Button variant="primary" type="submit">
+                  <Button
+                    disabled={!newMessage && !selectedFile}
+                    variant="primary"
+                    type="submit"
+                    style={{}}
+                  >
                     <FiSend />
                   </Button>
                 </InputGroup>
@@ -427,3 +555,4 @@ function ChatUI() {
     </div>
   );
 }
+

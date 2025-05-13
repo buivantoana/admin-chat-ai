@@ -21,6 +21,7 @@ export const MessageManagementController = () => {
       socket.onmessage = (event) => {
          try {
             const msg = JSON.parse(event.data);
+            console.log("socket", msg);
             if (msg.event === "new_message") {
                if (localStorage.getItem("notify_chat")) {
                   localStorage.setItem("notify_chat", JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")), msg.data.cid]))
@@ -44,6 +45,7 @@ export const MessageManagementController = () => {
                                     content: msg.data.content || "",
                                     content_raw: null,
                                     isRead: false,
+                                    file_url: msg.data.file_url
                                  },
                               ],
                            };
@@ -66,6 +68,7 @@ export const MessageManagementController = () => {
                                  content: msg.data.content || "",
                                  content_raw: null,
                                  isRead: false,
+                                 file_url: msg.data.file_url
                               },
                            ],
                         },

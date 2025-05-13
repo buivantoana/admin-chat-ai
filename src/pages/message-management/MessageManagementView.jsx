@@ -72,6 +72,7 @@ const ChatSidebar = ({ botChat, setChat, chat, initialLoad, loading }) => {
             <Button variant="light" className="p-0 text-dark border-0">
                Gần nhất <FiRepeat style={{ marginLeft: "10px" }} />
             </Button>
+
             <Button variant="light" onClick={handleShow} style={{ border: "1px solid #dddddd" }} className="p-1 text-dark">
                <FiFilter style={{ marginRight: "10px" }} /> Lọc
             </Button>
@@ -230,35 +231,43 @@ import { Row, Col } from 'react-bootstrap';
 import { useRef } from 'react'; // Thêm useRef để tham chiếu input
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import nochat from "../../images/img_no_message.webp"
+
+import { FiPaperclip } from "react-icons/fi"; // Sửa FiLink thành FiPaperclip
+
+
+
 function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    const [messages, setMessages] = useState(chat && chat.messages ? chat.messages : []);
-   const [newMessage, setNewMessage] = useState('');
+   const { id } = useParams();
+   const [newMessage, setNewMessage] = useState("");
    const [show, setShow] = useState(false);
    const [unreadCount, setUnreadCount] = useState(0);
    const fileInputRef = useRef(null);
    const chatRef = useRef(null);
    const lastScrollTop = useRef(0);
    const [loading, setLoading] = useState(false);
-
+   const [selectedFile, setSelectedFile] = useState(null); // State để lưu file được chọn
+   const [filePreview, setFilePreview] = useState(null); // State để lưu URL preview của file
+   const [loadingSend, setLoadingSend] = useState(false);
 
    // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
       if (chat && chat.messages) {
-         const updatedMessages = chat.messages.map(msg => ({
+         const updatedMessages = chat.messages.map((msg) => ({
             ...msg,
-            isRead: msg.isRead || false
+            isRead: msg.isRead || false,
          }));
          setMessages(updatedMessages);
-         const unread = updatedMessages.filter(msg => !msg.isRead).length;
+         const unread = updatedMessages.filter((msg) => !msg.isRead).length;
          setUnreadCount(unread);
 
          if (initialLoad.current && chatRef.current) {
-            setLoading(true);  // Bắt đầu loading khi đang cuộn
+            setLoading(true);
             setTimeout(() => {
                chatRef.current.scrollTop = chatRef.current.scrollHeight;
-               setLoading(false);  // Tắt loading sau khi cuộn xong
+               setLoading(false);
                initialLoad.current = false;
-            }, 300);  // Thời gian chờ để đảm bảo render xong
+            }, 300);
          }
       }
    }, [chat]);
@@ -272,241 +281,440 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
          const { scrollTop, scrollHeight, clientHeight } = chatElement;
          lastScrollTop.current = scrollTop;
 
-         // Kiểm tra nếu cuộn đến cuối
-         if (messages.filter((item) => item.isRead == false)[0]) {
+         if (messages.filter((item) => !item.isRead)[0]) {
             if (scrollTop + clientHeight >= scrollHeight - 5) {
-               const updatedMessages = messages.map(msg => ({
+               const updatedMessages = messages.map((msg) => ({
                   ...msg,
-                  isRead: true
+                  isRead: true,
                }));
 
-               setChatBot(botChat.map((item) => {
-                  if (item.cid === chat.cid) {
-                     return {
-                        ...item,
-                        messages: updatedMessages
-                     };
-                  }
-                  return item;
-               }));
+               setChatBot(
+                  botChat.map((item) => {
+                     if (item.cid === chat.cid) {
+                        return {
+                           ...item,
+                           messages: updatedMessages,
+                        };
+                     }
+                     return item;
+                  })
+               );
                if (localStorage.getItem("notify_chat")) {
-                  localStorage.setItem("notify_chat", JSON.stringify(JSON.parse(localStorage.getItem("notify_chat")).filter((item) => item != chat.cid)))
+                  localStorage.setItem(
+                     "notify_chat",
+                     JSON.stringify(
+                        JSON.parse(localStorage.getItem("notify_chat")).filter(
+                           (item) => item !== chat.cid
+                        )
+                     )
+                  );
                }
                setUnreadCount(0);
             }
          }
       };
 
-      chatElement.addEventListener('scroll', handleScroll);
-      return () => chatElement.removeEventListener('scroll', handleScroll);
+      chatElement.addEventListener("scroll", handleScroll);
+      return () => chatElement.removeEventListener("scroll", handleScroll);
    }, [messages]);
 
-   const handleSendMessage = (e) => {
-      e.preventDefault();
-      if (newMessage.trim()) {
-         const newMsg = {
-            content: newMessage,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            role: 'assistant',
-            isRead: false
-         };
-         const updatedMessages = [...messages, newMsg];
-         setMessages(updatedMessages);
-
-         // Cập nhật số tin nhắn chưa đọc nếu không ở cuối
-         if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
-            setUnreadCount(prev => prev + 1);
-         }
-
-         setNewMessage('');
-      }
-   };
-
-   const handleShow = () => setShow(true);
-   const handleClose = () => setShow(false);
-
+   // Hàm xử lý khi chọn file
    const handleFileUpload = (e) => {
       const file = e.target.files[0];
       if (file) {
          const fileUrl = URL.createObjectURL(file);
-         const fileType = file.type.split('/')[0];
-         const newMsg = {
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            sender: 'me',
-            isRead: false
-         };
+         const fileType = file.type.split("/")[0];
+         setSelectedFile(file);
+         setFilePreview({ type: fileType, url: fileUrl });
+      }
+   };
 
-         if (fileType === 'image') {
-            newMsg.image = fileUrl;
-         } else if (fileType === 'video') {
-            newMsg.video = fileUrl;
-         }
+   // Hàm xóa file preview
+   const removeFilePreview = () => {
+      setSelectedFile(null);
+      setFilePreview(null);
+      fileInputRef.current.value = "";
+   };
 
-         const updatedMessages = [...messages, newMsg];
-         setMessages(updatedMessages);
+   // Hàm gửi tin nhắn và file lên server
+   const handleSendMessage = async (e) => {
+      e.preventDefault();
+      setLoadingSend(true)
+      if (!newMessage.trim() && !selectedFile) return;
 
-         if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
-            setUnreadCount(prev => prev + 1);
+      const newMsg = {
+         content: newMessage || "",
+         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+         role: "user",
+         isRead: false,
+      };
+
+      let fileBase64 = "";
+      if (selectedFile) {
+         fileBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result); // Giữ nguyên chuỗi base64 với prefix
+            reader.readAsDataURL(selectedFile);
+         });
+
+         const fileType = selectedFile.type.split("/")[0];
+         if (fileType === "image") {
+            newMsg.image = URL.createObjectURL(selectedFile);
+         } else if (fileType === "video") {
+            newMsg.video = URL.createObjectURL(selectedFile);
          }
       }
+
+      // const updatedMessages = [...messages, newMsg];
+      // setMessages(updatedMessages);
+
+      // Cập nhật số tin nhắn chưa đọc nếu không ở cuối
+      if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
+         setUnreadCount((prev) => prev + 1);
+      }
+
+      // setNewMessage("");
+      // setSelectedFile(null);
+      // setFilePreview(null);
+      // fileInputRef.current.value = "";
+
+      // Gửi dữ liệu lên server (giả sử botChatMakeDemo là API để gửi tin nhắn)
+      const payload = {
+         content: newMessage || "",
+         platform: "messenger", // Theo body bạn cung cấp
+         file_raw: fileBase64 || "", // Chuỗi base64 với prefix nếu có file
+      };
+
+      try {
+         const response = await replyChatMake(id, payload, chat.cid)
+
+         if (response && Object.keys(response).length > 0) {
+            setNewMessage("");
+            setSelectedFile(null);
+            setFilePreview(null);
+            fileInputRef.current.value = "";
+            // const serverMsg = {
+            //    content: response.content || "Tin nhắn đã được gửi!",
+            //    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            //    role: "assistant",
+            //    isRead: false,
+            // };
+            // setMessages((prevMessages) => [...prevMessages, serverMsg]);
+         } else {
+            toast.error("Failed to send message.");
+         }
+      } catch (error) {
+         console.error("Error sending message:", error);
+         toast.error("Error sending message.");
+      }
+      setLoadingSend(false)
    };
 
    const triggerFileInput = () => {
       fileInputRef.current.click();
    };
-   console.log("AAA result", botChat);
+
+   const handleShow = () => setShow(true);
+   const handleClose = () => setShow(false);
+
    return (
       <>
-         {!chat && <div style={{ width: "68%" }} >
-            <Row>
-               <Col md={12} >
-                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                     <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center", gap: "15px" }}>
-                        <img src={nochat} alt="" />
-                        <h5 style={{ fontWeight: "bold" }}>Cuộc hội thoại sẽ xuất hiện ở đây</h5>
-                     </div>
-                  </Card>
-               </Col>
-            </Row>
-         </div>}
-
-         {chat && <div style={{ width: "68%" }} >
-            <Row>
-               <Col md={12} >
-
-                  <Card className="mb-3" style={{ background: "#f5f5f9", height: "77vh", position: "relative" }}>
-                     {loading && (
-                        <div className="d-flex justify-content-center align-items-center" style={{ position: 'absolute', width: "100%", height: "100%", background: "white", zIndex: 1, borderRadius: "10px" }}>
-                           <Spinner animation="border" variant="primary" />
+         {!chat && (
+            <div style={{ width: "68%" }}>
+               <Row>
+                  <Col md={12}>
+                     <Card
+                        className="mb-3"
+                        style={{
+                           background: "#f5f5f9",
+                           height: "77vh",
+                           display: "flex",
+                           justifyContent: "center",
+                           alignItems: "center",
+                        }}
+                     >
+                        <div
+                           style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: "15px",
+                           }}
+                        >
+                           <img src={nochat} alt="" />
+                           <h5 style={{ fontWeight: "bold" }}>Cuộc hội thoại sẽ xuất hiện ở đây</h5>
                         </div>
-                     )}
-                     <Card.Header style={{ background: "white", padding: "10px 20px" }} className="d-flex justify-content-between align-items-center">
-                        <div style={{ display: "flex", gap: "10px" }}>
-                           <div>
-                              <div className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                                 style={{ width: "40px", height: "40px", fontWeight: "bold" }}>
-                                 {chat.avatar ? <img src={chat.avatar} style={{ width: "40px", height: "40px", borderRadius: "50%" }} /> : "B"}
-                              </div>
-                              <p style={{ padding: "0 2px", background: "rgb(173, 216, 230)", borderRadius: "5px", fontSize: "11px", margin: 0, marginTop: "2px", color: "white" }}>Tư vấn</p>
-                           </div>
-                           <div>
-                              <strong>{chat.name ? chat.name : "Bot"} <FiTag /></strong>
-                              <p style={{ fontSize: "13px", textTransform: "capitalize" }}>{chat.platform}</p>
-                           </div>
-                        </div>
-                        <div className="d-flex align-items-center gap-2">
-                           {unreadCount > 0 && (
-                              <Badge bg="danger">{unreadCount} chưa đọc</Badge>
-                           )}
-                           <AutoReplyToggle botChat={botChat} chat={chat} setChatBot={setChatBot} />
-                           <FiAlertCircle
-                              style={{ cursor: "pointer" }}
-                              size={23}
-                              onClick={handleShow}
-                           />
-                        </div>
-                     </Card.Header>
-                     <Card.Body ref={chatRef} style={{ height: "55vh", overflowY: "auto", transition: "1s" }}>
+                     </Card>
+                  </Col>
+               </Row>
+            </div>
+         )}
 
-
-
-                        {messages.map((msg, index) => (
+         {chat && (
+            <div style={{ width: "68%" }}>
+               <Row>
+                  <Col md={12}>
+                     <Card
+                        className="mb-3"
+                        style={{ background: "#f5f5f9", height: "77vh", position: "relative" }}
+                     >
+                        {loading && (
                            <div
-                              key={index}
-                              className={`d-flex mb-2 mt-1 ${msg.role === "assistant" ? "justify-content-end" : "justify-content-start"}`}
+                              className="d-flex justify-content-center align-items-center"
+                              style={{
+                                 position: "absolute",
+                                 width: "100%",
+                                 height: "100%",
+                                 background: "white",
+                                 zIndex: 1,
+                                 borderRadius: "10px",
+                              }}
                            >
-                              <div
-                                 className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"}`}
-                                 style={{
-                                    maxWidth: "70%",
-                                    opacity: msg.isRead ? 1 : 0.7 // Tin nhắn chưa đọc sẽ mờ hơn
-                                 }}
-                              >
-                                 {msg.content && msg.role !== "system" && <p className="mb-0">{msg.content}</p>}
-                                 {msg.image && <img src={msg.image} alt="attachment" className="img-fluid rounded" />}
-                                 {msg.video && (
-                                    <video controls className="img-fluid rounded">
-                                       <source src={msg.video} type="video/mp4" />
-                                       Your browser does not support the video tag.
-                                    </video>
-                                 )}
-                                 <small>{msg.time}</small>
+                              <Spinner animation="border" variant="primary" />
+                           </div>
+                        )}
+                        <Card.Header
+                           style={{ background: "white", padding: "10px 20px" }}
+                           className="d-flex justify-content-between align-items-center"
+                        >
+                           <div style={{ display: "flex", gap: "10px" }}>
+                              <div>
+                                 <div
+                                    className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                                    style={{ width: "40px", height: "40px", fontWeight: "bold" }}
+                                 >
+                                    {chat.avatar ? (
+                                       <img
+                                          src={chat.avatar}
+                                          style={{ width: "40px", height: "40px", borderRadius: "50%" }}
+                                       />
+                                    ) : (
+                                       "B"
+                                    )}
+                                 </div>
+                                 <p
+                                    style={{
+                                       padding: "0 2px",
+                                       background: "rgb(173, 216, 230)",
+                                       borderRadius: "5px",
+                                       fontSize: "11px",
+                                       margin: 0,
+                                       marginTop: "2px",
+                                       color: "white",
+                                    }}
+                                 >
+                                    Tư vấn
+                                 </p>
+                              </div>
+                              <div>
+                                 <strong>
+                                    {chat.name ? chat.name : "Bot"} <FiTag />
+                                 </strong>
+                                 <p style={{ fontSize: "13px", textTransform: "capitalize" }}>
+                                    {chat.platform}
+                                 </p>
                               </div>
                            </div>
-                        ))}
-                     </Card.Body>
-                     <Card.Footer style={{ background: "white", display: chat.active == false ? "block" : "none" }}>
-                        <Form onSubmit={handleSendMessage}>
-                           <InputGroup>
-                              <Form.Control
-                                 type="text"
-                                 placeholder="Nhập tin nhắn của bạn"
-                                 value={newMessage}
-                                 onChange={(e) => setNewMessage(e.target.value)}
+                           <div className="d-flex align-items-center gap-2">
+                              {unreadCount > 0 && <Badge bg="danger">{unreadCount} chưa đọc</Badge>}
+                              <AutoReplyToggle botChat={botChat} chat={chat} setChatBot={setChatBot} />
+                              <FiAlertCircle
+                                 style={{ cursor: "pointer" }}
+                                 size={23}
+                                 onClick={handleShow}
                               />
-                              <Button variant="outline-secondary" onClick={triggerFileInput}>
-                                 <FiLink />
-                              </Button>
-                              <input
-                                 type="file"
-                                 ref={fileInputRef}
-                                 style={{ display: 'none' }}
-                                 accept="image/*,video/*"
-                                 onChange={handleFileUpload}
-                              />
-                              <Button variant="primary" type="submit">
-                                 <FiSend />
-                              </Button>
-                           </InputGroup>
-                        </Form>
-                     </Card.Footer>
-                  </Card>
-               </Col>
-            </Row>
+                           </div>
+                        </Card.Header>
+                        <Card.Body
+                           ref={chatRef}
+                           style={{ height: "55vh", overflowY: "auto", transition: "1s" }}
+                        >
+                           {messages.map((msg, index) => (
+                              <div
+                                 key={index}
+                                 className={`d-flex mb-2 mt-1 ${msg.role === "assistant" || msg.role !== "user"
+                                    ? "justify-content-end"
+                                    : "justify-content-start"
+                                    }`}
+                              >
+                                 <div
+                                    className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"
+                                       }`}
+                                    style={{
+                                       maxWidth: "70%",
+                                       opacity: msg.isRead ? 1 : 0.7,
+                                    }}
+                                 >
+                                    {msg.content && msg.role !== "system" && (
+                                       <p className="mb-0">{msg.content}</p>
+                                    )}
+                                    {msg.file_url && (
+                                       <img
+                                          src={msg.file_url}
+                                          alt="attachment"
+                                          className="img-fluid rounded"
+                                       />
+                                    )}
+                                    {msg.video && (
+                                       <video controls className="img-fluid rounded">
+                                          <source src={msg.video} type="video/mp4" />
+                                          Your browser does not support the video tag.
+                                       </video>
+                                    )}
+                                    <small>{msg.time}</small>
+                                 </div>
+                              </div>
+                           ))}
+                        </Card.Body>
+                        <Card.Footer
+                           style={{ background: "white", display: chat.active == false ? "block" : "none" }}
+                        >
+                           <Form onSubmit={handleSendMessage}>
+                              {/* Hiển thị preview file nếu có */}
+                              {filePreview && (
+                                 <div
+                                    style={{
+                                       display: "flex",
+                                       alignItems: "center",
+                                       marginBottom: "10px",
+                                       position: "relative",
+                                    }}
+                                 >
+                                    {filePreview.type === "image" ? (
+                                       <img
+                                          src={filePreview.url}
+                                          alt="preview"
+                                          style={{
+                                             maxWidth: "100px",
+                                             maxHeight: "100px",
+                                             borderRadius: "5px",
+                                             marginRight: "10px",
+                                          }}
+                                       />
+                                    ) : (
+                                       <video
+                                          src={filePreview.url}
+                                          style={{
+                                             maxWidth: "100px",
+                                             maxHeight: "100px",
+                                             borderRadius: "5px",
+                                             marginRight: "10px",
+                                          }}
+                                       />
+                                    )}
+                                    <Button
+                                       variant="danger"
+                                       size="sm"
+                                       onClick={removeFilePreview}
+                                       style={{
+                                          position: "absolute",
+                                          top: "-10px",
+                                          right: "-5px",
+                                          borderRadius: "50%",
+                                          padding: "0 6px",
+                                       }}
+                                    >
+                                       ×
+                                    </Button>
+                                 </div>
+                              )}
+                              <InputGroup>
+                                 <Form.Control
+                                    type="text"
+                                    placeholder="Nhập tin nhắn của bạn"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    style={{ borderRadius: "5px", borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+                                 />
+                                 <Button
+                                    variant="outline-secondary"
+                                    onClick={triggerFileInput}
+                                    style={{
+                                       border: "1px solid #ccc",
 
-            <Offcanvas show={show} onHide={handleClose} placement="end">
-               <Offcanvas.Header closeButton>
-                  <Offcanvas.Title>Thông tin</Offcanvas.Title>
-               </Offcanvas.Header>
-               <Offcanvas.Body>
-                  <Card>
-                     <Card.Body>
-                        <h5>Bùi Văn Toản</h5>
-                        <p>Website</p>
-                        <hr />
-                        <Form.Group className="mb-3">
-                           <Form.Label>Tag</Form.Label>
-                           <Form.Select>
-                              <option>Đang tương tác</option>
-                           </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                           <Form.Label>Trang thái</Form.Label>
-                           <Form.Select>
-                              <option>Tư vấn</option>
-                           </Form.Select>
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                           <Form.Label>Note</Form.Label>
-                           <Form.Control as="textarea" rows={3} />
-                        </Form.Group>
-                        <div className="d-flex justify-content-between">
-                           <Button variant="outline-danger">Đóng</Button>
-                           <Button variant="primary">Lưu</Button>
-                        </div>
-                     </Card.Body>
-                  </Card>
-               </Offcanvas.Body>
-            </Offcanvas>
-         </div>}
+
+                                    }}
+                                 >
+                                    <FiPaperclip />
+                                 </Button>
+                                 <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    style={{ display: "none" }}
+                                    accept="image/*,video/*"
+                                    onChange={handleFileUpload}
+                                 />
+                                 <Button
+                                    variant="primary"
+                                    type="submit"
+                                    disabled={!newMessage && !selectedFile}
+                                 >
+                                    {loadingSend ? (
+                                       <Spinner
+                                          as="span"
+                                          animation="border"
+                                          size="sm"
+                                          role="status"
+                                          aria-hidden="true"
+                                       />
+                                    ) : (
+                                       <FiSend />
+                                    )}
+                                 </Button>
+                              </InputGroup>
+                           </Form>
+                        </Card.Footer>
+                     </Card>
+                  </Col>
+               </Row>
+
+               <Offcanvas show={show} onHide={handleClose} placement="end">
+                  <Offcanvas.Header closeButton>
+                     <Offcanvas.Title>Thông tin</Offcanvas.Title>
+                  </Offcanvas.Header>
+                  <Offcanvas.Body>
+                     <Card>
+                        <Card.Body>
+                           <h5>Bùi Văn Toản</h5>
+                           <p>Website</p>
+                           <hr />
+                           <Form.Group className="mb-3">
+                              <Form.Label>Tag</Form.Label>
+                              <Form.Select>
+                                 <option>Đang tương tác</option>
+                              </Form.Select>
+                           </Form.Group>
+                           <Form.Group className="mb-3">
+                              <Form.Label>Trang thái</Form.Label>
+                              <Form.Select>
+                                 <option>Tư vấn</option>
+                              </Form.Select>
+                           </Form.Group>
+                           <Form.Group className="mb-3">
+                              <Form.Label>Note</Form.Label>
+                              <Form.Control as="textarea" rows={3} />
+                           </Form.Group>
+                           <div className="d-flex justify-content-between">
+                              <Button variant="outline-danger">Đóng</Button>
+                              <Button variant="primary">Lưu</Button>
+                           </div>
+                        </Card.Body>
+                     </Card>
+                  </Offcanvas.Body>
+               </Offcanvas>
+            </div>
+         )}
       </>
    );
 }
 
+
+
 import { OverlayTrigger, Popover } from "react-bootstrap";
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { botChatActive } from '../../services/chat_all';
+import { botChatActive, replyChatMake } from '../../services/chat_all';
 
 
 const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
