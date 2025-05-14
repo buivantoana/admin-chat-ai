@@ -16,7 +16,7 @@ const MessageManagementView = ({ botChat, setChatBot, loading }) => {
    }, [botChat]);
    return (
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-         <ChatSidebar botChat={botChat} initialLoad={initialLoad} setChat={setChat} loading={loading} chat={chat} />
+         <ChatSidebar botChat={botChat} initialLoad={initialLoad} setChatBot={setChatBot} setChat={setChat} loading={loading} chat={chat} />
          <ChatUI chat={chat} initialLoad={initialLoad} botChat={botChat} setChatBot={setChatBot} />
       </div>
    )
@@ -26,7 +26,7 @@ export default MessageManagementView
 
 
 
-const ChatSidebar = ({ botChat, setChat, chat, initialLoad, loading }) => {
+const ChatSidebar = ({ botChat, setChat, chat, initialLoad, loading ,setChatBot}) => {
    const [show, setShow] = useState(false);
    const [chatChanel, setChatChanel] = useState('inbox');
    const handleShow = () => setShow(true);
@@ -69,12 +69,12 @@ const ChatSidebar = ({ botChat, setChat, chat, initialLoad, loading }) => {
 
          {/* Sorting & Filtering */}
          <div className="d-flex justify-content-between align-items-center mb-2">
-            <Button variant="light" className="p-0 text-dark border-0">
-               Gần nhất <FiRepeat style={{ marginLeft: "10px" }} />
+            <Button variant="light" className="p-0 text-dark border-0" style={{fontSize:"14px"}}>
+               Gần nhất <FiRepeat style={{ marginLeft: "10px",width:"12px" }} />
             </Button>
-
-            <Button variant="light" onClick={handleShow} style={{ border: "1px solid #dddddd" }} className="p-1 text-dark">
-               <FiFilter style={{ marginRight: "10px" }} /> Lọc
+            <AutoReplyToggle setChatBot={setChatBot} botChat={botChat} all={true} />
+            <Button variant="light" onClick={handleShow} style={{ border: "1px solid #dddddd",fontSize:"14px" }} className="p-1 text-dark">
+               <FiFilter style={{ marginRight: "10px", width:"12px" }} /> Lọc
             </Button>
          </div>
 
@@ -253,24 +253,64 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
       if (chat && chat.messages) {
-         const updatedMessages = chat.messages.map((msg) => ({
-            ...msg,
-            isRead: msg.isRead || false,
-         }));
-         setMessages(updatedMessages);
-         const unread = updatedMessages.filter((msg) => !msg.isRead).length;
-         setUnreadCount(unread);
-
-         if (initialLoad.current && chatRef.current) {
+        // Cập nhật messages từ chat.messages
+        const updatedMessages = chat.messages.map((msg) => ({
+          ...msg,
+          isRead: msg.isRead || false,
+        }));
+        setMessages(updatedMessages);
+  
+        // Tính số tin nhắn chưa đọc (chỉ từ role === "user")
+        const unread = updatedMessages.filter((msg) => msg.role === "user" && !msg.isRead).length;
+        setUnreadCount(unread);
+  
+        // Chỉ cuộn xuống cuối khi khởi tạo hoặc tin nhắn mới từ bot
+        if (chatRef.current) {
+          const isNewMessage = messages.length !== updatedMessages.length;
+          const lastMessage = updatedMessages[updatedMessages.length - 1];
+          const shouldScroll =
+            initialLoad.current ||
+            (isNewMessage && lastMessage && lastMessage.role !== "user");
+  
+          if (shouldScroll) {
             setLoading(true);
             setTimeout(() => {
-               chatRef.current.scrollTop = chatRef.current.scrollHeight;
-               setLoading(false);
-               initialLoad.current = false;
+              chatRef.current.scrollTop = chatRef.current.scrollHeight;
+              setLoading(false);
+              initialLoad.current = false;
+  
+              // Reset notify_chat và unreadCount khi cuộn xuống cuối
+              if (unread > 0) {
+                setChatBot(
+                  botChat.map((item) =>
+                    item.cid === chat.cid
+                      ? {
+                          ...item,
+                          messages: updatedMessages.map((msg) => ({
+                            ...msg,
+                            isRead: true,
+                          })),
+                        }
+                      : item
+                  )
+                );
+                if (localStorage.getItem("notify_chat")) {
+                  localStorage.setItem(
+                    "notify_chat",
+                    JSON.stringify(
+                      JSON.parse(localStorage.getItem("notify_chat")).filter(
+                        (item) => item !== chat.cid
+                      )
+                    )
+                  );
+                }
+                setUnreadCount(0);
+              }
             }, 300);
-         }
+          }
+        }
       }
-   }, [chat]);
+    }, [chat, botChat]);
 
    // Xử lý cuộn và đánh dấu đã đọc
    useEffect(() => {
@@ -329,6 +369,24 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
       }
    };
 
+   function getFormattedDate() {
+      const now = new Date();
+
+      const pad = (num, size = 2) => String(num).padStart(size, '0');
+    
+      const year = now.getUTCFullYear();
+      const month = pad(now.getUTCMonth() + 1);
+      const day = pad(now.getUTCDate());
+      const hours = pad(now.getUTCHours());
+      const minutes = pad(now.getUTCMinutes());
+      const seconds = pad(now.getUTCSeconds());
+      const milliseconds = pad(now.getUTCMilliseconds(), 3);
+    
+      // Giả lập microseconds bằng cách thêm '000' vào milliseconds
+      const microseconds = milliseconds + '000';
+    
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${microseconds}+00:00`;
+    }
    // Hàm xóa file preview
    const removeFilePreview = () => {
       setSelectedFile(null);
@@ -344,9 +402,10 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
 
       const newMsg = {
          content: newMessage || "",
-         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-         role: "user",
-         isRead: false,
+         created: getFormattedDate(),
+         role: "hongnv",
+         isRead: true,
+         isSend:true
       };
 
       let fileBase64 = "";
@@ -359,24 +418,24 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
 
          const fileType = selectedFile.type.split("/")[0];
          if (fileType === "image") {
-            newMsg.image = URL.createObjectURL(selectedFile);
+            newMsg.file_url = URL.createObjectURL(selectedFile);
          } else if (fileType === "video") {
-            newMsg.video = URL.createObjectURL(selectedFile);
+            newMsg.file_url = URL.createObjectURL(selectedFile);
          }
       }
 
-      // const updatedMessages = [...messages, newMsg];
-      // setMessages(updatedMessages);
+      const updatedMessages = [...messages, newMsg];
+      setMessages(updatedMessages);
 
       // Cập nhật số tin nhắn chưa đọc nếu không ở cuối
-      if (chatRef.current.scrollTop + chatRef.current.clientHeight < chatRef.current.scrollHeight - 50) {
-         setUnreadCount((prev) => prev + 1);
-      }
+      // if (chatRef.current) {
+      //    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      //  }
 
-      // setNewMessage("");
-      // setSelectedFile(null);
-      // setFilePreview(null);
-      // fileInputRef.current.value = "";
+      setNewMessage("");
+      setSelectedFile(null);
+      setFilePreview(null);
+      fileInputRef.current.value = "";
 
       // Gửi dữ liệu lên server (giả sử botChatMakeDemo là API để gửi tin nhắn)
       const payload = {
@@ -389,10 +448,10 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
          const response = await replyChatMake(id, payload, chat.cid)
 
          if (response && Object.keys(response).length > 0) {
-            setNewMessage("");
-            setSelectedFile(null);
-            setFilePreview(null);
-            fileInputRef.current.value = "";
+            // setNewMessage("");
+            // setSelectedFile(null);
+            // setFilePreview(null);
+            // fileInputRef.current.value = "";
             // const serverMsg = {
             //    content: response.content || "Tin nhắn đã được gửi!",
             //    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -401,6 +460,8 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
             // };
             // setMessages((prevMessages) => [...prevMessages, serverMsg]);
          } else {
+            
+            setMessages(updatedMessages.filter((item)=>item.role != "hongnv"));
             toast.error("Failed to send message.");
          }
       } catch (error) {
@@ -537,6 +598,7 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                                     ? "justify-content-end"
                                     : "justify-content-start"
                                     }`}
+                                    style={{position:"relative"}}
                               >
                                  <div
                                     className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"
@@ -562,8 +624,17 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
                                           Your browser does not support the video tag.
                                        </video>
                                     )}
-                                    <small>{msg.time}</small>
+                                    <small className="message-time" style={{fontSize:"10px"}}>
+                          {msg.created && formatDateTime(msg.created) }
+                        </small>
                                  </div>
+                                 {msg.isSend && loadingSend && <small style={{position:"absolute",bottom:"-20px",right:10,fontSize:"12px"}}>Đang gửi <Spinner
+                                          as="span"
+                                          animation="border"
+                                          style={{width:".5rem",height:".5rem"}}
+                                          role="status"
+                                          aria-hidden="true"
+                                       /></small>}
                               </div>
                            ))}
                         </Card.Body>
@@ -717,38 +788,72 @@ import { toast } from 'react-toastify';
 import { botChatActive, replyChatMake } from '../../services/chat_all';
 
 
-const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
-   console.log("Auto complate", chat)
+const AutoReplyToggle = ({ chat, setChatBot, botChat, all }) => {
+   console.log("Auto complate", chat);
    const [loading, setLoading] = useState(false);
    const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
    const { id } = useParams();
+
    useEffect(() => {
-      if (chat) {
-         setIsAutoReplyOn(chat.active)
+      if (chat && !all) {
+         setIsAutoReplyOn(chat.active);
+      } else {
+         let isReply = botChat.filter((item) => item.active == true);
+         if (isReply && isReply.length > 0) {
+            setIsAutoReplyOn(true);
+         } else {
+            setIsAutoReplyOn(false);
+         }
       }
-   }, [chat])
+   }, [chat, botChat, all]);
 
    const toggleAutoReply = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-         let result = await botChatActive(id, { active: !isAutoReplyOn }, chat.cid)
-         if (result && (result.active == true || result.active == false)) {
-            setIsAutoReplyOn(result.active)
-            setChatBot(botChat.map((item) => {
-               if (item.cid == result.cid) {
-                  return { ...item, active: result.active }
-               }
-               return item
-            }))
-            toast.success(`Auto reply ${!isAutoReplyOn == true ? "ON" : "OFF"} Thành công`)
-         } else {
-            toast.warning(`Auto reply ${!isAutoReplyOn == true ? "ON" : "OFF"} Thất bại`)
-         }
+         if (all) {
+            // Xử lý bật/tắt auto-reply cho tất cả chat
+            const newActiveState = !isAutoReplyOn;
+            const promises = botChat.map((chatItem) =>
+               botChatActive(id, { active: newActiveState }, chatItem.cid)
+            );
+            const results = await Promise.all(promises);
 
+            // Kiểm tra xem tất cả các request có thành công không
+            const isSuccess = results.every((result) => result && (result.active === true || result.active === false));
+
+            if (isSuccess) {
+               // Cập nhật state botChat
+               const updatedBotChat = botChat.map((chatItem, index) => ({
+                  ...chatItem,
+                  active: results[index].active,
+               }));
+               setChatBot(updatedBotChat);
+               setIsAutoReplyOn(newActiveState);
+               toast.success(`Auto reply ${newActiveState ? "ON" : "OFF"} cho tất cả chat thành công`);
+            } else {
+               toast.warning(`Auto reply ${newActiveState ? "ON" : "OFF"} cho tất cả chat thất bại`);
+            }
+         } else {
+            // Xử lý cho chat đơn lẻ (giữ nguyên logic cũ)
+            let result = await botChatActive(id, { active: !isAutoReplyOn }, chat.cid);
+            if (result && (result.active === true || result.active === false)) {
+               setIsAutoReplyOn(result.active);
+               setChatBot(botChat.map((item) => {
+                  if (item.cid === result.cid) {
+                     return { ...item, active: result.active };
+                  }
+                  return item;
+               }));
+               toast.success(`Auto reply ${!isAutoReplyOn ? "ON" : "OFF"} thành công`);
+            } else {
+               toast.warning(`Auto reply ${!isAutoReplyOn ? "ON" : "OFF"} thất bại`);
+            }
+         }
       } catch (error) {
-         console.log(error)
+         console.log(error);
+         toast.error("Đã xảy ra lỗi khi xử lý auto reply");
       }
-      setLoading(false)
+      setLoading(false);
    };
 
    const popover = (
@@ -756,7 +861,7 @@ const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
          <Popover.Body>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
                <strong>Auto-reply</strong>
-               {loading ? <Spinner size='20' color='blue' /> :
+               {loading ? <Spinner size='sm' color='blue' /> :
                   <Form.Check
                      type="switch"
                      id="auto-reply-switch"
@@ -766,7 +871,6 @@ const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
                   />}
             </div>
             <p>Khi bật lên, bot sẽ tự trả lời tin nhắn của khách hàng</p>
-
          </Popover.Body>
       </Popover>
    );
@@ -774,11 +878,15 @@ const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
    return (
       <Dropdown>
          <OverlayTrigger trigger="click" placement="bottom" overlay={popover} rootClose>
-            <Button variant="light" className="d-flex align-items-center" style={{ border: "1px solid #dddddd", borderRadius: "20px" }}>
+            <Button
+               variant="light"
+               className="d-flex align-items-center"
+               style={{ border: "1px solid #dddddd", borderRadius: "20px", padding: "5px", fontSize: "14px" }}
+            >
                <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width={24}
-                  height={24}
+                  width={18}
+                  height={18}
                   style={{ marginRight: "10px" }}
                   viewBox="0 0 24 24"
                   fill="none"
@@ -795,13 +903,12 @@ const AutoReplyToggle = ({ chat, setChatBot, botChat }) => {
                   <path d="M15 13v2" />
                   <path d="M9 13v2" />
                </svg>
-               Auto-reply: <strong className="ms-1">{isAutoReplyOn ? "ON" : "OFF"}</strong>
+               Auto-reply: <strong style={{ fontSize: "14px" }} className="ms-1">{isAutoReplyOn ? "ON" : "OFF"}</strong>
             </Button>
          </OverlayTrigger>
       </Dropdown>
    );
 };
-
 
 
 
@@ -845,3 +952,17 @@ const ChatComponent = ({ messages, chat }) => {
 
 
 
+const formatDateTime = (isoString) => {
+   try {
+     const date = new Date(isoString);
+     const hours = date.getHours().toString().padStart(2, "0");
+     const minutes = date.getMinutes().toString().padStart(2, "0");
+     const day = date.getDate().toString().padStart(2, "0");
+     const month = (date.getMonth() + 1).toString().padStart(2, "0");
+     const year = date.getFullYear();
+     return `${hours}:${minutes} - ${day}/${month}/${year}`;
+   } catch (error) {
+     console.error("Error formatting date:", error);
+     return "Invalid date";
+   }
+ };
