@@ -253,64 +253,56 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
    // Tính số tin nhắn chưa đọc và cuộn xuống cuối khi khởi tạo
    useEffect(() => {
       if (chat && chat.messages) {
-        // Cập nhật messages từ chat.messages
-        const updatedMessages = chat.messages.map((msg) => ({
-          ...msg,
-          isRead: msg.isRead || false,
-        }));
-        setMessages(updatedMessages);
-  
-        // Tính số tin nhắn chưa đọc (chỉ từ role === "user")
-        const unread = updatedMessages.filter((msg) => msg.role === "user" && !msg.isRead).length;
-        setUnreadCount(unread);
-  
-        // Chỉ cuộn xuống cuối khi khởi tạo hoặc tin nhắn mới từ bot
-        if (chatRef.current) {
-          const isNewMessage = messages.length !== updatedMessages.length;
-          const lastMessage = updatedMessages[updatedMessages.length - 1];
-          const shouldScroll =
-            initialLoad.current ||
-            (isNewMessage && lastMessage && lastMessage.role !== "user");
-  
-          if (shouldScroll) {
+         // Cập nhật messages từ chat.messages
+         const updatedMessages = chat.messages.map((msg) => ({
+            ...msg,
+            isRead: msg.isRead || false,
+         }));
+         setMessages(updatedMessages);
+
+         // Tính số tin nhắn chưa đọc (chỉ từ role === "user")
+         const unread = updatedMessages.filter((msg) => msg.role === "user" && !msg.isRead).length;
+         setUnreadCount(unread);
+
+         // Chỉ cuộn xuống cuối và loading khi khởi tạo hoặc chat thay đổi
+         if (chatRef.current && initialLoad.current) {
             setLoading(true);
             setTimeout(() => {
-              chatRef.current.scrollTop = chatRef.current.scrollHeight;
-              setLoading(false);
-              initialLoad.current = false;
-  
-              // Reset notify_chat và unreadCount khi cuộn xuống cuối
-              if (unread > 0) {
-                setChatBot(
-                  botChat.map((item) =>
-                    item.cid === chat.cid
-                      ? {
-                          ...item,
-                          messages: updatedMessages.map((msg) => ({
-                            ...msg,
-                            isRead: true,
-                          })),
-                        }
-                      : item
-                  )
-                );
-                if (localStorage.getItem("notify_chat")) {
-                  localStorage.setItem(
-                    "notify_chat",
-                    JSON.stringify(
-                      JSON.parse(localStorage.getItem("notify_chat")).filter(
-                        (item) => item !== chat.cid
-                      )
-                    )
+               chatRef.current.scrollTop = chatRef.current.scrollHeight;
+               setLoading(false);
+               initialLoad.current = false;
+
+               // Reset notify_chat và unreadCount khi cuộn xuống cuối
+               if (unread > 0) {
+                  setChatBot(
+                     botChat.map((item) =>
+                        item.cid === chat.cid
+                           ? {
+                                ...item,
+                                messages: updatedMessages.map((msg) => ({
+                                   ...msg,
+                                   isRead: true,
+                                })),
+                             }
+                           : item
+                     )
                   );
-                }
-                setUnreadCount(0);
-              }
+                  if (localStorage.getItem("notify_chat")) {
+                     localStorage.setItem(
+                        "notify_chat",
+                        JSON.stringify(
+                           JSON.parse(localStorage.getItem("notify_chat")).filter(
+                              (item) => item !== chat.cid
+                           )
+                        )
+                     );
+                  }
+                  setUnreadCount(0);
+               }
             }, 300);
-          }
-        }
+         }
       }
-    }, [chat, botChat]);
+   }, [chat, botChat]);
 
    // Xử lý cuộn và đánh dấu đã đọc
    useEffect(() => {
@@ -428,9 +420,12 @@ function ChatUI({ chat, setChatBot, botChat, initialLoad }) {
       setMessages(updatedMessages);
 
       // Cập nhật số tin nhắn chưa đọc nếu không ở cuối
-      // if (chatRef.current) {
-      //    chatRef.current.scrollTop = chatRef.current.scrollHeight;
-      //  }
+      if (chatRef.current) {
+         setTimeout(() => {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+            console.log("After scroll:", chatRef.current.scrollTop);
+         }, 0);
+       }
 
       setNewMessage("");
       setSelectedFile(null);
@@ -791,7 +786,7 @@ import { botChatActive, replyChatMake } from '../../services/chat_all';
 const AutoReplyToggle = ({ chat, setChatBot, botChat, all }) => {
    console.log("Auto complate", chat);
    const [loading, setLoading] = useState(false);
-   const [isAutoReplyOn, setIsAutoReplyOn] = useState(false);
+   const [isAutoReplyOn, setIsAutoReplyOn] = useState(botChat.filter((item) => item.active == true)[0]);
    const { id } = useParams();
 
    useEffect(() => {
@@ -799,9 +794,12 @@ const AutoReplyToggle = ({ chat, setChatBot, botChat, all }) => {
          setIsAutoReplyOn(chat.active);
       } else {
          let isReply = botChat.filter((item) => item.active == true);
+         console.log(isReply)
          if (isReply && isReply.length > 0) {
+            console.log('isReply')
             setIsAutoReplyOn(true);
          } else {
+            console.log('isReply')
             setIsAutoReplyOn(false);
          }
       }
