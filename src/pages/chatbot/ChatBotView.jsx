@@ -65,7 +65,7 @@ const ChatBotView = ({ bots, setLoading }) => {
     >
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>
-          <i className="bi bi-robot"></i> Đào tạo chatbot
+          <i className="bi bi-robot"></i> Danh sách bot
         </h4>
         <div>
           <Button
@@ -96,9 +96,9 @@ const ChatBotView = ({ bots, setLoading }) => {
                 <div className="col-md-4" style={{ marginTop: "10px" }}>
                   <Card
                     className="border-primary card-hover"
-                    style={{ cursor: "pointer", border: "1px solid #ddd" }}
+                    style={{ cursor: "pointer", border: "1px solid #ddd", position: "relative" }}
                   >
-                    <Card.Body>
+                    <Card.Body onClick={() => handleNavigate(item.bid)}>
                       <div
                         style={{
                           display: "flex",
@@ -107,7 +107,7 @@ const ChatBotView = ({ bots, setLoading }) => {
                       >
                         <div
                           className="d-flex align-items-center"
-                          onClick={() => handleNavigate(item.bid)}
+
                         >
                           <img
                             src={item.avatar ? `data:image/png;base64,${item.avatar}` : "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"}
@@ -135,26 +135,21 @@ const ChatBotView = ({ bots, setLoading }) => {
                         />
                       </div>
 
-                      <div className="d-flex justify-content-end mt-2">
-                        <Button
-                          variant="outline-dark"
-                          size="sm"
-                          className="me-2"
-                        >
-                          <FiSettings />
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          onClick={() => {
-                            handleShow(item)
 
-                          }}
-                          size="sm"
-                        >
-                          <FiTrash2 />
-                        </Button>
-                      </div>
                     </Card.Body>
+
+                    <Button
+                      variant="outline-danger"
+                      style={{ position: "absolute", zIndex: 1, bottom: "15px", right: "20px" }}
+                      onClick={() => {
+                        handleShow(item)
+
+                      }}
+                      size="sm"
+                    >
+                      <FiTrash2 />
+                    </Button>
+
                   </Card>
                 </div>
               );
@@ -182,8 +177,8 @@ const ChatBotView = ({ bots, setLoading }) => {
             {bots.length &&
               bots.map((item) => {
                 return (
-                  <tr>
-                    <td onClick={() => handleNavigate(item.bid)}>
+                  <tr style={{ position: "relative" }} onClick={() => handleNavigate(item.bid)}>
+                    <td >
                       <img
                         src={item.avatar ? `data:image/png;base64,${item.avatar}` : "https://ss-images.saostar.vn/wp700/pc/1613810558698/Facebook-Avatar_3.png"}
                         width={50}
@@ -208,13 +203,14 @@ const ChatBotView = ({ bots, setLoading }) => {
                     </td>
                     <td>{item.created}</td>
                     <td>
-                      <Button variant="outline-dark" size="sm" className="me-2">
+                      {/* <Button variant="outline-dark" size="sm" className="me-2">
                         <FiSettings />
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="outline-danger"
-                        onClick={() => {
-                          handleShow(item)
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row's onClick from firing
+                          handleShow(item);
                         }}
                         size="sm"
                       >

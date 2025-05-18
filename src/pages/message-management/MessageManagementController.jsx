@@ -38,16 +38,16 @@ export const MessageManagementController = () => {
         const msg = JSON.parse(event.data);
         console.log("socket", msg);
         if (msg.event === "new_message") {
-            if(msg.data.role =="user"){
-               if (localStorage.getItem("notify_chat")) {
-                 localStorage.setItem(
-                   "notify_chat",
-                   JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")), msg.data.cid])
-                 );
-               } else {
-                 localStorage.setItem("notify_chat", JSON.stringify([msg.data.cid]));
-               }
+          if (msg.data.role == "user") {
+            if (localStorage.getItem("notify_chat")) {
+              localStorage.setItem(
+                "notify_chat",
+                JSON.stringify([...JSON.parse(localStorage.getItem("notify_chat")), msg.data.cid])
+              );
+            } else {
+              localStorage.setItem("notify_chat", JSON.stringify([msg.data.cid]));
             }
+          }
           setChatBot((prevBotChat) => {
             const chatExists = prevBotChat.some((item) => item.cid === msg.data.cid);
 
@@ -63,7 +63,7 @@ export const MessageManagementController = () => {
                         role: msg.data.role || "",
                         content: msg.data.content || "",
                         content_raw: null,
-                        isRead:msg.data.role=="user" ? false :true,
+                        isRead: msg.data.role == "user" ? false : true,
                         file_url: msg.data.file_url,
                       },
                     ],
@@ -73,24 +73,23 @@ export const MessageManagementController = () => {
               });
             } else {
               return [
-                ...prevBotChat,
                 {
                   cid: msg.data.cid,
                   bid: msg.data.bid,
                   name: msg.data.name,
                   avatar: msg.data.avatar,
                   messages: [
-                     ...item.messages.filter((item)=>item.role!="hongnv"),
                     {
-                     created:getFormattedDate(),
+                      created: getFormattedDate(),
                       role: msg.data.role || "",
                       content: msg.data.content || "",
                       content_raw: null,
-                      isRead: msg.data.role=="user" ? false :true,
+                      isRead: msg.data.role == "user" ? false : true,
                       file_url: msg.data.file_url,
                     },
                   ],
                 },
+                ...prevBotChat
               ];
             }
           });
@@ -185,20 +184,20 @@ export const MessageManagementController = () => {
 };
 
 function getFormattedDate() {
-   const now = new Date();
+  const now = new Date();
 
-   const pad = (num, size = 2) => String(num).padStart(size, '0');
- 
-   const year = now.getUTCFullYear();
-   const month = pad(now.getUTCMonth() + 1);
-   const day = pad(now.getUTCDate());
-   const hours = pad(now.getUTCHours());
-   const minutes = pad(now.getUTCMinutes());
-   const seconds = pad(now.getUTCSeconds());
-   const milliseconds = pad(now.getUTCMilliseconds(), 3);
- 
-   // Giả lập microseconds bằng cách thêm '000' vào milliseconds
-   const microseconds = milliseconds + '000';
- 
-   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${microseconds}+00:00`;
- }
+  const pad = (num, size = 2) => String(num).padStart(size, '0');
+
+  const year = now.getUTCFullYear();
+  const month = pad(now.getUTCMonth() + 1);
+  const day = pad(now.getUTCDate());
+  const hours = pad(now.getUTCHours());
+  const minutes = pad(now.getUTCMinutes());
+  const seconds = pad(now.getUTCSeconds());
+  const milliseconds = pad(now.getUTCMilliseconds(), 3);
+
+  // Giả lập microseconds bằng cách thêm '000' vào milliseconds
+  const microseconds = milliseconds + '000';
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${microseconds}+00:00`;
+}

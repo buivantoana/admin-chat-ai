@@ -274,6 +274,7 @@ function ChatUI() {
       sender: "other",
     },
   ]);
+  const messagesEndRef = useRef(null);
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null); // State để lưu file được chọn
   const [filePreview, setFilePreview] = useState(null); // State để lưu URL preview của file
@@ -289,6 +290,15 @@ function ChatUI() {
       setFilePreview({ type: fileType, url: fileUrl });
     }
   };
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+    }
+  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
 
   // Hàm xóa file preview
   const removeFilePreview = () => {
@@ -391,41 +401,46 @@ function ChatUI() {
               style={{ background: "white", padding: "10px 20px" }}
               className="d-flex justify-content-between align-items-center"
             >
-              <div style={{ display: "flex", gap: "10px" }}>
-                <div>
-                  <div
-                    className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    B
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <div>
+                    <div
+                      className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      B
+                    </div>
+                    <p
+                      style={{
+                        padding: "0 2px",
+                        background: "rgb(173, 216, 230)",
+                        borderRadius: "5px",
+                        fontSize: "11px",
+                        margin: 0,
+                        marginTop: "2px",
+                        color: "white",
+                      }}
+                    >
+                      Tư vấn
+                    </p>
                   </div>
-                  <p
-                    style={{
-                      padding: "0 2px",
-                      background: "rgb(173, 216, 230)",
-                      borderRadius: "5px",
-                      fontSize: "11px",
-                      margin: 0,
-                      marginTop: "2px",
-                      color: "white",
-                    }}
-                  >
-                    Tư vấn
-                  </p>
+                  <div>
+                    <strong>
+                      Demo <FiTag />
+                    </strong>
+                    <p style={{ fontSize: "13px" }}>Website</p>
+                  </div>
                 </div>
-                <div>
-                  <strong>
-                    Demo <FiTag />
-                  </strong>
-                  <p style={{ fontSize: "13px" }}>Website</p>
-                </div>
+                <Button variant="outline-primary" style={{ height: "max-content", fontSize: "12px", padding: "5px 7px" }}  >
+                  Khởi tạo lại
+                </Button>
               </div>
             </Card.Header>
-            <Card.Body style={{ height: "38vh", overflowY: "auto" }}>
+            <Card.Body ref={messagesEndRef} style={{ height: "38vh", overflowY: "auto" }}>
               {messages.map((msg, index) => (
                 <div
                   key={index}

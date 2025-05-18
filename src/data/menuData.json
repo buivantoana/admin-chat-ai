@@ -9,7 +9,7 @@
         "link": "/message-management"
       },
       {
-        "text": "Đào tạo chatbot",
+        "text": "Cài đặt chatbot",
         "icon": "bx bx-brain",
         "available": true,
         "link": "/chatbot-training"
