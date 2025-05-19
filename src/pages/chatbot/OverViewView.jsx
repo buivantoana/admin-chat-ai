@@ -33,6 +33,8 @@ import {
   Button,
   Dropdown,
   InputGroup,
+  Modal,
+  Spinner,
 } from "react-bootstrap";
 
 const ChatBot = ({ setLoading }) => {
@@ -139,6 +141,7 @@ const ChatBot = ({ setLoading }) => {
 
   return (
     <Container>
+
       <Row>
         <div
           style={{
@@ -262,24 +265,20 @@ import { useParams } from "react-router-dom";
 import { editBot, getBot } from "../../services/bot";
 import { toast } from "react-toastify";
 import { useChatContext } from "../../App";
-import { botChatMakeDemo } from "../../services/chat_all";
+import { botChatMakeDemo, botDeleteChat, botGetAllChatDemo } from "../../services/chat_all";
 
 
 function ChatUI() {
   const { id } = useParams();
-  const [messages, setMessages] = useState([
-    {
-      text: "👋 Hello! How can I help you today?",
-      time: "23:09", // Cập nhật thời gian theo thời gian hiện tại
-      sender: "other",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null); // State để lưu file được chọn
   const [filePreview, setFilePreview] = useState(null); // State để lưu URL preview của file
   const fileInputRef = useRef(null);
-
+  const [chatId, setChatId] = useState(null);
+  const [show, setShow] = useState(false);
+  const [loadingInit, setLoadingInit] = useState(false);
   // Hàm xử lý khi chọn file
   const handleFileUpload = () => {
     const file = fileInputRef.current.files[0];
@@ -297,9 +296,25 @@ function ChatUI() {
   };
   useEffect(() => {
     scrollToBottom();
+
   }, [messages]);
-
-
+  useEffect(() => {
+    getChatDemo();
+  }, []);
+  const getChatDemo = async () => {
+    try {
+      let result = await botGetAllChatDemo(id);
+      if (result && result.length > 0) {
+        setChatId(result[0].cid)
+        setMessages(result[0].messages.filter((_, index) => index != 0))
+      } else {
+        setMessages([])
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  console.log(messages);
   // Hàm xóa file preview
   const removeFilePreview = () => {
     setSelectedFile(null);
@@ -317,8 +332,8 @@ function ChatUI() {
         hour: "2-digit",
         minute: "2-digit",
       }), // Thời gian hiện tại (23:11)
-      sender: "me",
-      text: newMessage || "",
+      role: "user",
+      content: newMessage || "",
     };
 
     let fileBase64 = "";
@@ -331,7 +346,7 @@ function ChatUI() {
 
       const fileType = selectedFile.type.split("/")[0];
       if (fileType === "image") {
-        newMsg.image = URL.createObjectURL(selectedFile);
+        newMsg.file_url = URL.createObjectURL(selectedFile);
       } else if (fileType === "video") {
         newMsg.video = URL.createObjectURL(selectedFile);
       }
@@ -356,25 +371,7 @@ function ChatUI() {
       const response = await botChatMakeDemo(id, payload);
 
       if (response && Object.keys(response).length > 0) {
-        const serverMsg = {
-          text: response.content,
-          time: new Date(response.created).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          sender: "other",
-        };
-
-        if (response.file_url) {
-          const fileType = response.file_url.split(".").pop().toLowerCase();
-          if (["jpg", "jpeg", "png", "gif"].includes(fileType)) {
-            serverMsg.image = response.file_url;
-          } else if (["mp4", "webm"].includes(fileType)) {
-            serverMsg.video = response.file_url;
-          }
-        }
-
-        setMessages((prevMessages) => [...prevMessages, serverMsg]);
+        getChatDemo()
         toast.success("Message sent successfully!");
       } else {
         toast.error("Failed to send message.");
@@ -385,8 +382,48 @@ function ChatUI() {
     }
   };
 
+  const handleReset = async () => {
+    setShow(false)
+    setLoadingInit(true);
+    try {
+      if (chatId) {
+        let result = await botDeleteChat(id, chatId);
+        if (result && Object.keys(result).length > 0) {
+
+          getChatDemo()
+          toast.success(result.message);
+        } else {
+          toast.error(result.detail);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setLoadingInit(false);
+  }
   return (
     <div style={{ width: "100%", height: "20vh" }}>
+      <Modal show={show} onHide={() => setShow(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <b>Khởi tạo lại</b>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>
+            Bạn có muốn khởi tạo lại đoạn chát dùng thử ko?
+          </p>
+        </Modal.Body>
+
+        {/* Footer */}
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShow(false)}>
+            Hủy
+          </Button>
+          <Button onClick={handleReset} variant="danger">Đồng ý</Button>
+        </Modal.Footer>
+      </Modal>
       <Row>
         <Col md={12}>
           <Card
@@ -435,31 +472,48 @@ function ChatUI() {
                     <p style={{ fontSize: "13px" }}>Website</p>
                   </div>
                 </div>
-                <Button variant="outline-primary" style={{ height: "max-content", fontSize: "12px", padding: "5px 7px" }}  >
-                  Khởi tạo lại
+                <Button
+                  variant="outline-primary"
+                  disabled={messages.length === 0 || loadingInit}
+                  onClick={() => setShow(true)}
+                  style={{
+                    height: "max-content",
+                    fontSize: "12px",
+                    padding: "5px 7px",
+                    minWidth: "90px",
+                  }}
+                >
+                  {loadingInit ? (
+                    <>
+                      <Spinner animation="border" size="sm" style={{ marginRight: 5 }} />
+                      Đang khởi tạo...
+                    </>
+                  ) : (
+                    "Khởi tạo lại"
+                  )}
                 </Button>
               </div>
             </Card.Header>
             <Card.Body ref={messagesEndRef} style={{ height: "38vh", overflowY: "auto" }}>
-              {messages.map((msg, index) => (
+              {messages && messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`d-flex mb-2 mt-1 ${msg.sender === "me"
+                  className={`d-flex mb-2 mt-1 ${msg.role === "user"
                     ? "justify-content-end"
                     : "justify-content-start"
                     }`}
                 >
                   <div
-                    className={`p-2 rounded ${msg.sender === "me" ? "bg-primary text-white" : "bg-white"
+                    className={`p-2 rounded ${msg.role === "user" ? "bg-primary text-white" : "bg-white"
                       }`}
                     style={{ maxWidth: "70%" }}
                   >
-                    {msg.text && <p className="mb-0">{msg.text}</p>}
+                    {msg.content && <p className="mb-0">{msg.content}</p>}
                     <div style={{ display: "flex", flexDirection: "column" }}>
 
-                      {msg.image && (
+                      {msg.file_url && (
                         <img
-                          src={msg.image}
+                          src={msg.file_url}
                           alt="attachment"
                           className="img-fluid rounded"
                           style={{ maxWidth: "100%", marginTop: "5px" }}
@@ -475,7 +529,7 @@ function ChatUI() {
                           Your browser does not support the video tag.
                         </video>
                       )}
-                      <small style={{ color: msg.sender === "me" ? "white" : "#697A8D" }} >{msg.time}</small>
+                      {/* <small style={{ color: msg.sender === "user" ? "white" : "#697A8D" }} >{msg.time}</small> */}
                     </div>
                   </div>
                 </div>
